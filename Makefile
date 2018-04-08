@@ -4,7 +4,8 @@ MKDIR_P ?= mkdir -p
 
 CXXFLAGS += -std=c++17 -pedantic -Wall -Wextra -O0 -g
 INCLUDE += -I include
-CPPFLAGS += $(INCLUDE) -MMD -MP
+DEFINE +=
+CPPFLAGS += $(DEFINE) $(INCLUDE) -MMD -MP
 
 LIBCMINUS_SRC := $(shell find lib -name *.cpp -or -name *.c)
 LIBCMINUS_OBJ := $(LIBCMINUS_SRC:%=$(BUILD_DIR)/%.o)
@@ -56,10 +57,17 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 clean:
 	$(RM) -r $(BUILD_DIR)
 
+tidy:
+	clang-tidy $(LIBCMINUS_SRC) -- $(INCLUDE) $(DEFINE)
+	clang-tidy $(CMINUS_SRC) -- $(INCLUDE) $(DEFINE)
+	clang-tidy $(LEXICO_SRC) -- $(INCLUDE) $(DEFINE)
+	clang-tidy $(SINTATICO_SRC) -- $(INCLUDE) $(DEFINE)
+	clang-tidy $(GERACODIGO_SRC) -- $(INCLUDE) $(DEFINE)
+
 -include $(LIBCMINUS_DEP)
 -include $(LEXICO_DEP) 
 -include $(SINTATICO_DEP)
 -include $(GERACODIGO_DEP)
 -include $(CMINUS_DEP)
 
-.PHONY: all clean
+.PHONY: all clean tidy
