@@ -56,13 +56,19 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 
 clean:
 	$(RM) -r $(BUILD_DIR)
+	$(RM) libcminus.a
+	$(RM) cminus
+	$(RM) lexico
+	$(RM) sintatico
+	$(RM) geracodigo
 
 tidy:
-	clang-tidy $(LIBCMINUS_SRC) -- $(INCLUDE) $(DEFINE)
-	clang-tidy $(CMINUS_SRC) -- $(INCLUDE) $(DEFINE)
-	clang-tidy $(LEXICO_SRC) -- $(INCLUDE) $(DEFINE)
-	clang-tidy $(SINTATICO_SRC) -- $(INCLUDE) $(DEFINE)
-	clang-tidy $(GERACODIGO_SRC) -- $(INCLUDE) $(DEFINE)
+	clang-tidy $(LIBCMINUS_SRC) $(CMINUS_SRC) $(LEXICO_SRC) \
+		$(SINTATICO_SRC) $(GERACODIGO_SRC) -- $(INCLUDE) $(DEFINE)
+
+format:
+	clang-format -i $(LIBCMINUS_SRC) $(CMINUS_SRC) $(LEXICO_SRC) \
+		$(SINTATICO_SRC) $(GERACODIGO_SRC)
 
 -include $(LIBCMINUS_DEP)
 -include $(LEXICO_DEP) 
@@ -70,4 +76,4 @@ tidy:
 -include $(GERACODIGO_DEP)
 -include $(CMINUS_DEP)
 
-.PHONY: all clean tidy
+.PHONY: all clean tidy format
