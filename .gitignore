@@ -3,6 +3,8 @@
 /sintatico
 /geracodigo
 /cminus
+/in
+/out
 
 
 # Created by https://www.gitignore.io/api/c++,vim
