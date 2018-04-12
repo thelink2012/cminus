@@ -1,5 +1,8 @@
 #include "cminus/scanner.hpp"
 
+namespace cminus
+{
+
 bool Scanner::is_letter(char c)
 {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -8,6 +11,11 @@ bool Scanner::is_letter(char c)
 bool Scanner::is_digit(char c)
 {
     return (c >= '0' && c <= '9');
+}
+
+bool Scanner::is_space(char c)
+{
+    return (c == ' ' || c == '\t' || c == '\n');
 }
 
 bool Scanner::lex_identifier(const char*& out_pos)
@@ -55,6 +63,11 @@ auto Scanner::next_word() -> std::optional<Word>
                 std::string_view(),
             };
 
+        case ' ': case '\t': case '\n':
+            for(++current_pos; is_space(*current_pos); ++current_pos) {}
+            return this->next_word();
+            // TODO this recursion is bad
+
         case '0': case '1': case '2': case '3': case '4': case '5': case '6':
         case '7': case '8': case '9':
             if(lex_number(current_pos))
@@ -98,8 +111,17 @@ auto Scanner::next_word() -> std::optional<Word>
             }
             return std::nullopt;
 
+        case '-':
+            ++current_pos;
+            return Word {
+                Category::Minus,
+                std::string_view(token_start, size_t(current_pos - token_start)),
+            };
+
         default:
             return std::nullopt;
     }
+}
+
 }
 

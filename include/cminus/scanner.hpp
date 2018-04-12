@@ -3,6 +3,9 @@
 #include <string_view>
 #include <optional>
 
+namespace cminus
+{
+
 enum class Category
 {
     Identifier,
@@ -62,8 +65,11 @@ private:
 
     static bool is_letter(char c);
     static bool is_digit(char c);
+    static bool is_space(char c);
 
     bool lex_identifier(const char*& out_pos);
     bool lex_number(const char*& out_pos);
 };
 
+
+}
