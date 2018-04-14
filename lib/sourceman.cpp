@@ -1,68 +1,76 @@
 #include "cminus/sourceman.hpp"
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 namespace cminus
 {
-
-constexpr size_t BUFFER_SIZE = 4096;
-
-// TODO could add a hint parameter for size of stream
-//
-
-SourceFile::SourceFile(std::string source_data_) :
-    source_data(std::move(source_data_))
+SourceFile::SourceFile(std::string source_text_a) :
+    source_text(std::move(source_text_a))
 {
-    // Build the line offsets data structure.
-    if(!source_data.empty())
+    // Discover line locations.
+    if(!source_text.empty())
     {
-        this->line_offsets.push_back(source_data.data());
-        for(size_t i = 0; i < source_data.size(); ++i)
+        this->lines.push_back(source_text.data());
+        for(auto& c : source_text)
         {
-            if(source_data[i] == '\n')
-                this->line_offsets.push_back(&source_data[i]);
+            if(c == '\n')
+                this->lines.push_back(std::addressof(c) + 1);
         }
     }
 }
 
-auto SourceFile::from_stream(std::FILE* stream) -> std::optional<SourceFile>
+auto SourceFile::from_stream(std::FILE* stream, size_t hint_size)
+        -> std::optional<SourceFile>
 {
-    char buffer[BUFFER_SIZE];
-    size_t ncount;
+    std::string source_text;
 
-    std::string source_data;
+    // Add one to the hint_size so we can trigger EOF on the first iteration.
+    const size_t block_size = (hint_size == -1 ? 4096 : 1 + hint_size);
 
-    while((ncount = std::fread(buffer, 1, BUFFER_SIZE, stream)))
+    while(true)
     {
-        source_data.append(buffer, ncount);
+        auto block_pos = source_text.size();
+        source_text.resize(source_text.size() + block_size);
 
-        if(ncount < BUFFER_SIZE)
+        auto ncount = std::fread(&source_text[block_pos], 1, block_size, stream);
+
+        if(ncount < block_size)
         {
             if(feof(stream))
+            {
+                source_text.resize(block_pos + ncount);
                 break;
+            }
             return std::nullopt;
         }
     }
-    
-    return SourceFile { std::move(source_data) };
+
+    // Because we added one to the hint_size, we need a threshold of at least one
+    // before we shrink_to_fit, otherwise we'll always perform uncessary reallocs.
+    if(source_text.capacity() > source_text.size() + 128)
+        source_text.shrink_to_fit();
+
+    return SourceFile{std::move(source_text)};
 }
 
-auto SourceFile::find_line_and_column(SourceLocation loc) -> std::pair<unsigned, unsigned>
+auto SourceFile::find_line_and_column(SourceLocation loc) const
+        -> std::pair<unsigned, unsigned>
 {
-    assert(loc >= this->source_data.data()
-           && loc <= this->source_data.data() + this->source_data.size());
+    assert(loc >= this->source_text.data()
+           && loc <= this->source_text.data() + this->source_text.size() + 1);
 
-    auto it = std::upper_bound(line_offsets.begin(), line_offsets.end(), loc);
-    auto line = static_cast<unsigned>(std::distance(line_offsets.begin(), it));
+    auto it_line_end = std::upper_bound(lines.begin(), lines.end(), loc);
+    auto line = static_cast<unsigned>(std::distance(lines.begin(), it_line_end));
 
-    return { line, 1 };
-    // TODO find column later on
+    assert(it_line_end != lines.begin());
+    auto it_line_begin = std::prev(it_line_end);
+    auto column = static_cast<unsigned>(1 + std::distance(*it_line_begin, loc));
+
+    return {line, column};
 }
 
-auto SourceFile::view_with_terminator() const -> std::string_view
+auto SourceFile::view_with_terminator() const -> SourceRange
 {
-    return std::string_view(source_data.data(), source_data.size() + 1);
+    return SourceRange(source_text.data(), source_text.size() + 1);
 }
-
 }
-

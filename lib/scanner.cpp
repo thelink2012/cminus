@@ -1,4 +1,5 @@
-#include "cminus/scanner.hpp"
+#include <cminus/scanner.hpp>
+#include <cminus/utility/contracts.hpp>
 
 namespace cminus
 {
@@ -18,52 +19,53 @@ bool Scanner::is_space(char c)
     return (c == ' ' || c == '\t' || c == '\n');
 }
 
-bool Scanner::lex_identifier(const char*& out_pos)
+bool Scanner::lex_identifier(SourceLocation& out_pos)
 {
-    const char* p = out_pos;
-    
-    if(is_letter(*p))
-    {
-        for(++p; is_letter(*p) || is_digit(*p); ++p)
-        {}
-        out_pos = p;
-        return true;
-    }
-    return false;
+    auto pos = out_pos;
+    assert(is_letter(*pos));
+
+    ++pos;
+    while(is_letter(*pos) || is_digit(*pos))
+        ++pos;
+
+    out_pos = pos;
+    return true;
 }
 
-bool Scanner::lex_number(const char*& out_pos)
+bool Scanner::lex_number(SourceLocation& out_pos)
 {
-    const char* p = out_pos;
+    auto pos = out_pos;
+    assert(is_digit(*pos));
 
-    if(is_digit(*p))
-    {
-        for(++p; is_digit(*p); ++p)
-        {}
-        if(is_letter(*p))
-        {
-            return false;
-        }
-        out_pos = p;
-        return true;
-    }
-    return false;
+    ++pos;
+    while(is_digit(*pos))
+        ++pos;
+
+    if(is_letter(*pos))
+        return false;
+
+    out_pos = pos;
+    return true;
 }
-
 
 auto Scanner::next_word() -> std::optional<Word>
 {
-    // TODO remove recursive calls
+    SourceLocation token_start;
     
-    const char* token_start = current_pos;
+    // We better favour the use of a label instead of recursion here.
+    // A looping structure would work as well, but it gets things
+    // a bit more dense (aka ugly code).
+next_word_again:
+    token_start = current_pos;
     switch(*current_pos)
     {
         case '\0':
             return std::nullopt;
 
         case ' ': case '\t': case '\n':
-            for(++current_pos; is_space(*current_pos); ++current_pos) {}
-            return this->next_word();
+            ++current_pos;
+            while(is_space(*current_pos)) ++current_pos;
+            goto next_word_again;
 
         case '0': case '1': case '2': case '3': case '4': case '5': case '6':
         case '7': case '8': case '9':
@@ -73,13 +75,15 @@ auto Scanner::next_word() -> std::optional<Word>
             }
             else
             {
+                // Something is wrong with this number. Skip to the next token.
                 while(is_digit(*current_pos) || is_letter(*current_pos))
                     ++current_pos;
-                auto bad_lexeme = std::string_view { token_start, 
-                                                     size_t(current_pos - token_start) };
+
+                auto bad_lexeme = SourceRange(token_start,
+                                              std::distance(token_start, current_pos));
                 diagman.report(source, bad_lexeme.begin(), Diag::lexer_bad_number)
                        .range(bad_lexeme);
-                return this->next_word();
+                goto next_word_again;
             }
 
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g':
@@ -92,7 +96,7 @@ auto Scanner::next_word() -> std::optional<Word>
         case 'V': case 'W': case 'X': case 'Y': case 'Z':
             if(lex_identifier(current_pos))
             {
-                std::string_view lexeme { token_start, size_t(current_pos - token_start) };
+                SourceRange lexeme(token_start, std::distance(token_start, current_pos));
                 Category category;
 
                 if(lexeme == "if")
@@ -112,12 +116,10 @@ auto Scanner::next_word() -> std::optional<Word>
 
                 return Word { category, lexeme };
             }
-            else
-            {
-                // This shall never happen, is_identifier cannot fail.
-                assert(0);
-                return std::nullopt;
-            }
+
+            // this shall never happen because is_identifier cannot fail.
+            cminus_unreachable();
+            break;
 
         case '-':
             ++current_pos;
@@ -125,14 +127,15 @@ auto Scanner::next_word() -> std::optional<Word>
 
         default:
         {
-            auto bad_char = std::string_view(current_pos, 1);
+            // We found a character that is not part of our alphabet.
+            // Give a diagnostic and skip it.
+            auto bad_char = SourceRange(current_pos, 1);
             diagman.report(source, bad_char.begin(), Diag::lexer_bad_char)
                 .range(bad_char);
             ++current_pos;
-            return this->next_word();
+            goto next_word_again;
         }
     }
 }
 
 }
-

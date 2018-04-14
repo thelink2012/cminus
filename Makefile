@@ -1,3 +1,4 @@
+# TODO NDEBUG
 BUILD_DIR ?= ./build
 MKDIR_P ?= mkdir -p
 
@@ -61,13 +62,16 @@ clean:
 	$(RM) sintatico
 	$(RM) geracodigo
 
+test:
+	$(SHELL) -c 'cd test; . ./test.sh'
+
 tidy:
 	clang-tidy $(LIBCMINUS_SRC) $(CMINUS_SRC) $(LEXICO_SRC) \
-		$(SINTATICO_SRC) $(GERACODIGO_SRC) -- $(INCLUDE) $(DEFINE)
+		$(SINTATICO_SRC) $(GERACODIGO_SRC) -- $(INCLUDE) $(DEFINE) $(CXXFLAGS)
 
 format:
-	clang-format -i $(LIBCMINUS_SRC) $(CMINUS_SRC) $(LEXICO_SRC) \
-		$(SINTATICO_SRC) $(GERACODIGO_SRC)
+	find -name '*.cpp' -o -name '*.hpp' -o -name '*.c' -o -name '*.h' \
+		| xargs clang-format -i
 
 -include $(LIBCMINUS_DEP)
 -include $(LEXICO_DEP) 
@@ -75,4 +79,4 @@ format:
 -include $(GERACODIGO_DEP)
 -include $(CMINUS_DEP)
 
-.PHONY: all clean tidy format
+.PHONY: all clean test tidy format

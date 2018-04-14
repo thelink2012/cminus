@@ -1,11 +1,7 @@
 #include <cminus/scanner.hpp>
-#include <cstdio>
+#include <cminus/utility/contracts.hpp>
+#include <cminus/utility/scope_guard.hpp>
 #include <cstring>
-#include <memory>
-#include <string>
-#include <string_view>
-#include <vector>
-#include <algorithm>
 using namespace cminus;
 
 auto category_to_string(Category category) -> std::string_view
@@ -44,10 +40,59 @@ auto category_to_string(Category category) -> std::string_view
         case Category::CloseCurly:
             return "SYM";
         default:
-            assert(0);
-            std::abort();
-            // TODO ^ Unreachable macro
+            cminus_unreachable();
     }
+}
+
+int lexico(std::FILE* istream, std::FILE* ostream)
+{
+    std::optional<std::pair<unsigned, SourceRange>> error;
+    DiagnosticManager diagman;
+
+    auto source = SourceFile::from_stream(istream);
+    if(!source)
+    {
+        perror("error: ");
+        return 1;
+    }
+
+    diagman.handler([&](const Diagnostic& diag) {
+        auto [line, column] = source->find_line_and_column(diag.loc);
+        switch(diag.code)
+        {
+            case Diag::lexer_bad_number:
+                error = std::pair{line, diag.ranges.front()};
+                break;
+            case Diag::lexer_bad_char:
+                error = std::pair{line, diag.ranges.front()};
+                break;
+        }
+        return true;
+    });
+
+    auto print_line = [&](unsigned line,
+                          std::string_view catname,
+                          std::string_view lexeme) {
+        fprintf(ostream, "(%u,%.*s,\"%.*s\")\n", line,
+                static_cast<int>(catname.size()), catname.data(),
+                static_cast<int>(lexeme.size()), lexeme.data());
+    };
+
+    Scanner scanner(*source, diagman);
+    while(auto word = scanner.next_word())
+    {
+        if(error)
+            break;
+
+        auto [line, column] = source->find_line_and_column(word->lexeme.begin());
+        auto catname = category_to_string(word->category);
+        print_line(line, catname, word->lexeme);
+    }
+
+    if(error)
+        print_line(error->first, "ERROR", error->second);
+
+    return 0;
 }
 
 int main(int argc, char* argv[])
@@ -58,62 +103,39 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    FILE* output_stream = [&] {
-        if(!strcmp(argv[2], "-"))
-            return stdout;
-        else
-            return fopen(argv[2], "wb");
-    }();
-
-    SourceFile source = [&]{
-        // FIXME no error handling taking place (fopen and unwrap).
-        FILE* f = fopen(argv[1], "rb");
-        auto resp = SourceFile::from_stream(f).value();
-        fclose(f);
-        return resp;
-    }();
-
-    DiagnosticManager diagman;
-    std::optional<std::pair<unsigned, std::string_view>> error;
-    diagman.diag_handler([&] (const Diagnostic& diag) {
-            auto [line, column] = source.find_line_and_column(diag.loc);
-            switch(diag.code)
-            {
-                case Diag::lexer_bad_number:
-                    error = std::pair { line, diag.ranges.front() };
-                    break;
-                case Diag::lexer_bad_char:
-                    error = std::pair { line, diag.ranges.front() };
-                    break;
-            }
-            return true;
-    });
-
-    auto print_line = [&](unsigned line, std::string_view catname, std::string_view lexeme) {
-        fprintf(output_stream, "(%u,%.*s,\"%.*s\")\n",
-                line,
-                static_cast<int>(catname.size()), catname.data(),
-                static_cast<int>(lexeme.size()), lexeme.data());
-    };
-    
-    Scanner scanner(source, diagman);
-    while(auto word = scanner.next_word())
+    std::FILE* ostream;
+    ScopeGuard ostream_guard([&] { fclose(ostream); });
+    if(!strcmp(argv[2], "-"))
     {
-        if(error)
-            break;
-        auto [line, column] = source.find_line_and_column(word->lexeme.begin());
-        auto catname = category_to_string(word->category);
-        print_line(line, catname, word->lexeme);
+        ostream = stdout;
+        ostream_guard.dismiss();
+    }
+    else
+    {
+        ostream = fopen(argv[2], "wb");
+        if(ostream == nullptr)
+        {
+            perror("lexico: error: ");
+            return 1;
+        }
     }
 
-    // Having the error handling body here we avoid duplication of code.
-    // That is because an error may happen right before EOF too.
-    if(error)
+    std::FILE* istream;
+    ScopeGuard istream_guard([&] { fclose(istream); });
+    if(!strcmp(argv[1], "-"))
     {
-        print_line(error->first, "ERROR", error->second);
+        istream = stdin;
+        istream_guard.dismiss();
+    }
+    else
+    {
+        istream = fopen(argv[1], "rb");
+        if(istream == nullptr)
+        {
+            perror("lexico: error: ");
+            return 1;
+        }
     }
 
-    // TODO use a finally guard instead.
-    if(output_stream != stdout)
-        fclose(output_stream);
+    return lexico(istream, ostream);
 }

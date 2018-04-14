@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,cppcoreguidelines-*,clang-analyzer-*,misc-*,modernize-*,performance-*,portability-*,readability-identifier-naming'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,-*,clang-analyzer-*,misc-*,modernize-*,performance-*,portability-*,readability-identifier-naming'
 CheckOptions:    
   - key:             readability-identifier-naming.ClassCase
     value:           CamelCase
