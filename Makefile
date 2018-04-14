@@ -1,4 +1,3 @@
-CXX ?= g++-7
 BUILD_DIR ?= ./build
 MKDIR_P ?= mkdir -p
 
@@ -9,23 +8,23 @@ CPPFLAGS += $(DEFINE) $(INCLUDE) -MMD -MP
 
 LIBCMINUS_SRC := $(shell find lib -name *.cpp -or -name *.c)
 LIBCMINUS_OBJ := $(LIBCMINUS_SRC:%=$(BUILD_DIR)/%.o)
-LIBCMINUS_DEP := $(OBJS:.o:.d)
+LIBCMINUS_DEP := $(LIBCMINUS_OBJ:.o=.d)
 
 LEXICO_SRC := $(shell find src/lexico -name *.cpp -or -name *.c)
 LEXICO_OBJ := $(LEXICO_SRC:%=$(BUILD_DIR)/%.o)
-LEXICO_DEP := $(OBJS:.o:.d)
+LEXICO_DEP := $(LEXICO_OBJ:.o=.d)
 
 SINTATICO_SRC := $(shell find src/sintatico -name *.cpp -or -name *.c)
 SINTATICO_OBJ := $(SINTATICO_SRC:%=$(BUILD_DIR)/%.o)
-SINTATICO_DEP := $(OBJS:.o:.d)
+SINTATICO_DEP := $(SINTATICO_OBJ:.o=.d)
 
 GERACODIGO_SRC := $(shell find src/geracodigo -name *.cpp -or -name *.c)
 GERACODIGO_OBJ := $(GERACODIGO_SRC:%=$(BUILD_DIR)/%.o)
-GERACODIGO_DEP := $(OBJS:.o:.d)
+GERACODIGO_DEP := $(GERACODIGO_OBJ:.o=.d)
 
 CMINUS_SRC := $(shell find src/cminus -name *.cpp -or -name *.c)
 CMINUS_OBJ := $(CMINUS_SRC:%=$(BUILD_DIR)/%.o)
-CMINUS_DEP := $(OBJS:.o:.d)
+CMINUS_DEP := $(CMINUS_OBJ:.o=.d)
 
 
 all: lexico sintatico geracodigo cminus
