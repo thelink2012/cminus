@@ -51,33 +51,36 @@ bool Scanner::lex_number(const char*& out_pos)
 }
 
 
-
 auto Scanner::next_word() -> std::optional<Word>
 {
+    // TODO remove recursive calls
+    
     const char* token_start = current_pos;
     switch(*current_pos)
     {
         case '\0':
-            return Word {
-                Category::EndOfCode,
-                std::string_view(),
-            };
+            return std::nullopt;
 
         case ' ': case '\t': case '\n':
             for(++current_pos; is_space(*current_pos); ++current_pos) {}
             return this->next_word();
-            // TODO this recursion is bad
 
         case '0': case '1': case '2': case '3': case '4': case '5': case '6':
         case '7': case '8': case '9':
             if(lex_number(current_pos))
             {
-                return Word {
-                    Category::Number,
-                    std::string_view(token_start, size_t(current_pos - token_start))
-                }; 
+                return Word(Category::Number, token_start, current_pos);
             }
-            return std::nullopt;
+            else
+            {
+                while(is_digit(*current_pos) || is_letter(*current_pos))
+                    ++current_pos;
+                auto bad_lexeme = std::string_view { token_start, 
+                                                     size_t(current_pos - token_start) };
+                diagman.report(source, bad_lexeme.begin(), Diag::lexer_bad_number)
+                       .range(bad_lexeme);
+                return this->next_word();
+            }
 
         case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g':
         case 'h': case 'i': case 'j': case 'k': case 'l': case 'm': case 'n':
@@ -109,17 +112,25 @@ auto Scanner::next_word() -> std::optional<Word>
 
                 return Word { category, lexeme };
             }
-            return std::nullopt;
+            else
+            {
+                // This shall never happen, is_identifier cannot fail.
+                assert(0);
+                return std::nullopt;
+            }
 
         case '-':
             ++current_pos;
-            return Word {
-                Category::Minus,
-                std::string_view(token_start, size_t(current_pos - token_start)),
-            };
+            return Word(Category::Minus, token_start, current_pos);
 
         default:
-            return std::nullopt;
+        {
+            auto bad_char = std::string_view(current_pos, 1);
+            diagman.report(source, bad_char.begin(), Diag::lexer_bad_char)
+                .range(bad_char);
+            ++current_pos;
+            return this->next_word();
+        }
     }
 }
 

@@ -8,28 +8,6 @@
 #include <algorithm>
 using namespace cminus;
 
-auto read_file(const char* filename) -> std::pair<std::unique_ptr<const char>, size_t>
-{
-    FILE* file = fopen(filename, "rb");
-    if(file != nullptr)
-    {
-        fseek(file, 0, SEEK_END);
-        long fsize = ftell(file);
-        fseek(file, 0, SEEK_SET);
-
-        char *result = new char[fsize + 1];
-        fread(result, fsize, 1, file);
-        result[fsize] = 0;
-
-        fclose(file);
-        return {
-            std::unique_ptr<const char> { result },
-            size_t(fsize)
-        };
-    }
-    return { nullptr, 0 };
-}
-
 auto category_to_string(Category category) -> std::string_view
 {
     switch(category)
@@ -65,35 +43,11 @@ auto category_to_string(Category category) -> std::string_view
         case Category::OpenCurly:
         case Category::CloseCurly:
             return "SYM";
-        case Category::EndOfCode:
-            return "EOF";
         default:
             assert(0);
             std::abort();
             // TODO ^ Unreachable macro
     }
-}
-
-auto build_line_offsets(std::string_view source) -> std::vector<const char*>
-{
-    std::vector<const char*> offsets;
-    offsets.push_back(source.begin());
-    for(auto curr = source.begin(); curr != source.end(); ++curr)
-    {
-        if(*curr == '\n')
-            offsets.push_back(curr + 1);
-    }
-    return offsets;
-}
-
-auto find_line_for_word(const Word& word, const std::vector<const char*>& offsets) -> unsigned
-{
-    auto it = std::upper_bound(offsets.begin(), offsets.end(), word.lexeme.begin());
-    if(it != offsets.end())
-        return static_cast<unsigned>(std::distance(offsets.begin(), it));
-
-    assert(0);
-    return 0;
 }
 
 int main(int argc, char* argv[])
@@ -110,24 +64,53 @@ int main(int argc, char* argv[])
         else
             return fopen(argv[2], "wb");
     }();
-    
-    auto [input_content, input_size] = read_file(argv[1]);
 
-    auto input_view = std::string_view {
-        input_content.get(),
-        input_size
-    };
+    SourceFile source = [&]{
+        // FIXME no error handling taking place (fopen and unwrap).
+        FILE* f = fopen(argv[1], "rb");
+        auto resp = SourceFile::from_stream(f).value();
+        fclose(f);
+        return resp;
+    }();
 
-    Scanner scanner(input_view);
-    auto line_offsets = build_line_offsets(input_view);
-    while(auto word = scanner.next_word())
-    {
-        auto catname = category_to_string(word->category);
-        auto& lexeme = word->lexeme;
+    DiagnosticManager diagman;
+    std::optional<std::pair<unsigned, std::string_view>> error;
+    diagman.diag_handler([&] (const Diagnostic& diag) {
+            auto [line, column] = source.find_line_and_column(diag.loc);
+            switch(diag.code)
+            {
+                case Diag::lexer_bad_number:
+                    error = std::pair { line, diag.ranges.front() };
+                    break;
+                case Diag::lexer_bad_char:
+                    error = std::pair { line, diag.ranges.front() };
+                    break;
+            }
+            return true;
+    });
+
+    auto print_line = [&](unsigned line, std::string_view catname, std::string_view lexeme) {
         fprintf(output_stream, "(%u,%.*s,\"%.*s\")\n",
-                find_line_for_word(*word, line_offsets),
+                line,
                 static_cast<int>(catname.size()), catname.data(),
                 static_cast<int>(lexeme.size()), lexeme.data());
+    };
+    
+    Scanner scanner(source, diagman);
+    while(auto word = scanner.next_word())
+    {
+        if(error)
+            break;
+        auto [line, column] = source.find_line_and_column(word->lexeme.begin());
+        auto catname = category_to_string(word->category);
+        print_line(line, catname, word->lexeme);
+    }
+
+    // Having the error handling body here we avoid duplication of code.
+    // That is because an error may happen right before EOF too.
+    if(error)
+    {
+        print_line(error->first, "ERROR", error->second);
     }
 
     // TODO use a finally guard instead.

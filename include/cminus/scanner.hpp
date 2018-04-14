@@ -1,4 +1,6 @@
 #pragma once
+#include <cminus/sourceman.hpp>
+#include <cminus/diagnostics.hpp>
 #include <cassert>
 #include <string_view>
 #include <optional>
@@ -37,30 +39,39 @@ enum class Category
     CloseBracket,
     OpenCurly,
     CloseCurly,
-
-    EndOfCode,
 };
 
 struct Word
 {
     const Category category;
-    const std::string_view lexeme;
+    const SourceRange lexeme;
+
+    explicit Word(Category category, SourceRange lexeme)
+        : category(category), lexeme(lexeme)
+    {}
+
+    explicit Word(Category category, const char* begin, const char* end)
+        : category(category), lexeme(begin, std::distance(begin, end))
+    {}
 };
 
 class Scanner
 {
 public:
-    explicit Scanner(std::string_view source) :
-        source(std::move(source))
+    explicit Scanner(const SourceFile& source,
+                     DiagnosticManager& diagman) :
+        source(source), diagman(diagman)
     {
-        this->current_pos = this->source.begin();
-        assert(*this->source.end() == '\0');
+        auto source_view = source.view_with_terminator();
+        assert(*std::prev(source_view.end()) == '\0');
+        this->current_pos = source_view.begin();
     }
 
     auto next_word() -> std::optional<Word>;
 
 private:
-    std::string_view source;
+    const SourceFile& source;
+    DiagnosticManager& diagman;
     const char* current_pos;
 
     static bool is_letter(char c);
@@ -69,6 +80,7 @@ private:
 
     bool lex_identifier(const char*& out_pos);
     bool lex_number(const char*& out_pos);
+
 };
 
 
