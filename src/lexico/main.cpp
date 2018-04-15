@@ -52,7 +52,7 @@ int lexico(std::FILE* istream, std::FILE* ostream)
     auto source = SourceFile::from_stream(istream);
     if(!source)
     {
-        perror("error: ");
+        perror("lexico: error");
         return 1;
     }
 
@@ -61,9 +61,8 @@ int lexico(std::FILE* istream, std::FILE* ostream)
         switch(diag.code)
         {
             case Diag::lexer_bad_number:
-                error = std::pair{line, diag.ranges.front()};
-                break;
             case Diag::lexer_bad_char:
+            case Diag::lexer_unclosed_comment:
                 error = std::pair{line, diag.ranges.front()};
                 break;
         }
@@ -115,7 +114,8 @@ int main(int argc, char* argv[])
         ostream = fopen(argv[2], "wb");
         if(ostream == nullptr)
         {
-            perror("lexico: error: ");
+            ostream_guard.dismiss();
+            perror("lexico: error");
             return 1;
         }
     }
@@ -132,7 +132,8 @@ int main(int argc, char* argv[])
         istream = fopen(argv[1], "rb");
         if(istream == nullptr)
         {
-            perror("lexico: error: ");
+            istream_guard.dismiss();
+            perror("lexico: error");
             return 1;
         }
     }

@@ -15,6 +15,7 @@ enum class Diag
 {
     lexer_bad_number,
     lexer_bad_char,
+    lexer_unclosed_comment,
 };
 
 /// Parameter for `Diag` printing.

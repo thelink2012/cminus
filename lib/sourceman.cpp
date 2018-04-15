@@ -1,63 +1,63 @@
 #include "cminus/sourceman.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 
 namespace cminus
 {
-SourceFile::SourceFile(std::string source_text_a) :
-    source_text(std::move(source_text_a))
+SourceFile::SourceFile(std::unique_ptr<char[]> source_data_a, size_t source_size_a) :
+    source_data(std::move(source_data_a)), source_size(source_size_a)
 {
     // Discover line locations.
-    if(!source_text.empty())
+    this->lines.push_back(&source_data[0]);
+    for(size_t i = 0; i < source_size; ++i)
     {
-        this->lines.push_back(source_text.data());
-        for(auto& c : source_text)
-        {
-            if(c == '\n')
-                this->lines.push_back(std::addressof(c) + 1);
-        }
+        if(source_data[i] == '\n')
+            this->lines.push_back(&source_data[i + 1]);
     }
 }
 
 auto SourceFile::from_stream(std::FILE* stream, size_t hint_size)
         -> std::optional<SourceFile>
 {
-    std::string source_text;
+    std::unique_ptr<char[]> source_data, temp_source_data;
+    size_t source_size = 0; //< not including null terminator
 
     // Add one to the hint_size so we can trigger EOF on the first iteration.
     const size_t block_size = (hint_size == -1 ? 4096 : 1 + hint_size);
 
     while(true)
     {
-        auto block_pos = source_text.size();
-        source_text.resize(source_text.size() + block_size);
+        auto block_pos = source_size;
 
-        auto ncount = std::fread(&source_text[block_pos], 1, block_size, stream);
+        // Reallocate the unique pointer (plus space for null terminator).
+        temp_source_data.reset(new char[1 + source_size + block_size]);
+        std::memcpy(temp_source_data.get(), source_data.get(), source_size);
+        std::swap(source_data, temp_source_data);
+        source_size += block_size;
+
+        auto ncount = std::fread(&source_data[block_pos], 1, block_size, stream);
 
         if(ncount < block_size)
         {
             if(feof(stream))
             {
-                source_text.resize(block_pos + ncount);
+                source_size = block_pos + ncount;
                 break;
             }
             return std::nullopt;
         }
     }
 
-    // Because we added one to the hint_size, we need a threshold of at least one
-    // before we shrink_to_fit, otherwise we'll always perform uncessary reallocs.
-    if(source_text.capacity() > source_text.size() + 128)
-        source_text.shrink_to_fit();
-
-    return SourceFile{std::move(source_text)};
+    source_data[source_size] = '\0';
+    return SourceFile{std::move(source_data), source_size};
 }
 
 auto SourceFile::find_line_and_column(SourceLocation loc) const
         -> std::pair<unsigned, unsigned>
 {
-    assert(loc >= this->source_text.data()
-           && loc <= this->source_text.data() + this->source_text.size() + 1);
+    assert(loc >= &this->source_data[0]
+           && loc <= &this->source_data[source_size]);
 
     auto it_line_end = std::upper_bound(lines.begin(), lines.end(), loc);
     auto line = static_cast<unsigned>(std::distance(lines.begin(), it_line_end));
@@ -71,6 +71,6 @@ auto SourceFile::find_line_and_column(SourceLocation loc) const
 
 auto SourceFile::view_with_terminator() const -> SourceRange
 {
-    return SourceRange(source_text.data(), source_text.size() + 1);
+    return SourceRange(&source_data[0], source_size + 1);
 }
 }

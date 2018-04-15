@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdio>
 #include <optional>
-#include <string>
+#include <memory>
 #include <string_view>
 #include <vector>
 
@@ -17,8 +17,11 @@ using SourceRange = std::string_view;
 class SourceFile
 {
 public:
-    /// Constructs a source file from a source text.
-    explicit SourceFile(std::string);
+    /// Constructs a source file from a source text pointer and its size.
+    //
+    /// The source text must include a null terminator, but such terminator
+    /// does not count to the size parameter.
+    explicit SourceFile(std::unique_ptr<char[]>, size_t);
 
     SourceFile(const SourceFile&) = delete;
     SourceFile& operator=(const SourceFile&) = delete;
@@ -41,7 +44,8 @@ public:
             -> std::pair<unsigned, unsigned>;
 
 private:
-    std::string source_text;
+    std::unique_ptr<char[]> source_data;
+    size_t source_size;
     std::vector<SourceLocation> lines;
 };
 

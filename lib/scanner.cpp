@@ -52,9 +52,9 @@ auto Scanner::next_word() -> std::optional<Word>
 {
     SourceLocation token_start;
     
-    // We better favour the use of a label instead of recursion here.
-    // A looping structure would work as well, but it gets things
-    // a bit more dense (aka ugly code).
+    // We'll use a few labels here. Consider this is an automaton.
+    // Alternatives are recursion and a loop. Both cases were
+    // discarded as they made things uglier than with labels.
 next_word_again:
     token_start = current_pos;
     switch(*current_pos)
@@ -66,6 +66,108 @@ next_word_again:
             ++current_pos;
             while(is_space(*current_pos)) ++current_pos;
             goto next_word_again;
+
+        case '/':
+            ++current_pos;
+            if(*current_pos == '*')
+            {
+                // Find the end of the comment and try another word afterwards.
+                for(++current_pos; *current_pos; ++current_pos)
+                {
+                    if(*current_pos == '*' && *std::next(current_pos) == '/')
+                    {
+                        std::advance(current_pos, 2);
+                        goto next_word_again;
+                    }
+                }
+
+                // End of stream but no end of comment found.
+                diagman.report(source, token_start, Diag::lexer_unclosed_comment)
+                    .range(SourceRange(token_start, 2));
+                return std::nullopt;
+            }
+            return Word(Category::Divide, token_start, current_pos);
+
+        case '*':
+            ++current_pos;
+            return Word(Category::Multiply, token_start, current_pos);
+
+        case '-':
+            ++current_pos;
+            return Word(Category::Minus, token_start, current_pos);
+
+        case '+':
+            ++current_pos;
+            return Word(Category::Plus, token_start, current_pos);
+
+        case '<':
+            ++current_pos;
+            if(*current_pos == '=')
+            {
+                ++current_pos;
+                return Word(Category::LessEqual, token_start, current_pos);
+            }
+            return Word(Category::Less, token_start, current_pos);
+
+        case '>':
+            ++current_pos;
+            if(*current_pos == '=')
+            {
+                ++current_pos;
+                return Word(Category::GreaterEqual, token_start, current_pos);
+            }
+            return Word(Category::Greater, token_start, current_pos);
+
+        case '=':
+            ++current_pos;
+            if(*current_pos == '=')
+            {
+                ++current_pos;
+                return Word(Category::Equal, token_start, current_pos);
+            }
+            return Word(Category::Assign, token_start, current_pos);
+
+        case '!':
+            ++current_pos;
+            if(*current_pos == '=')
+            {
+                ++current_pos;
+                return Word(Category::NotEqual, token_start, current_pos);
+            }
+            --current_pos;
+            goto invalid_char;
+
+        case ';':
+            ++current_pos;
+            return Word(Category::Semicolon, token_start, current_pos);
+
+        case ',':
+            ++current_pos;
+            return Word(Category::Comma, token_start, current_pos);
+
+        case '(':
+            ++current_pos;
+            return Word(Category::OpenParen, token_start, current_pos);
+
+        case ')':
+            ++current_pos;
+            return Word(Category::CloseParen, token_start, current_pos);
+
+        case '[':
+            ++current_pos;
+            return Word(Category::OpenBracket, token_start, current_pos);
+
+        case ']':
+            ++current_pos;
+            return Word(Category::CloseBracket, token_start, current_pos);
+
+        case '{':
+            ++current_pos;
+            return Word(Category::OpenCurly, token_start, current_pos);
+
+        case '}':
+            ++current_pos;
+            return Word(Category::CloseCurly, token_start, current_pos);
 
         case '0': case '1': case '2': case '3': case '4': case '5': case '6':
         case '7': case '8': case '9':
@@ -121,17 +223,13 @@ next_word_again:
             cminus_unreachable();
             break;
 
-        case '-':
-            ++current_pos;
-            return Word(Category::Minus, token_start, current_pos);
-
+        invalid_char:
         default:
         {
             // We found a character that is not part of our alphabet.
             // Give a diagnostic and skip it.
-            auto bad_char = SourceRange(current_pos, 1);
-            diagman.report(source, bad_char.begin(), Diag::lexer_bad_char)
-                .range(bad_char);
+            diagman.report(source, current_pos, Diag::lexer_bad_char)
+                .range(SourceRange(current_pos, 1));
             ++current_pos;
             goto next_word_again;
         }
