@@ -12,7 +12,6 @@ for infile in *.in; do
     else
         printf "\033[0;31mFAILED\033[0m\n"
         cat "$tempfile"
-        printf "\n"
         exit_code=1
     fi
 done
