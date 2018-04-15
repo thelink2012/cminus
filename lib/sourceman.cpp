@@ -1,6 +1,6 @@
-#include "cminus/sourceman.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cminus/sourceman.hpp>
 #include <cstring>
 
 namespace cminus
@@ -24,14 +24,14 @@ auto SourceFile::from_stream(std::FILE* stream, size_t hint_size)
     size_t source_size = 0; //< not including null terminator
 
     // Add one to the hint_size so we can trigger EOF on the first iteration.
-    const size_t block_size = (hint_size == -1 ? 4096 : 1 + hint_size);
+    const size_t block_size = (hint_size == -1u ? 4096 : 1 + hint_size);
 
     while(true)
     {
         auto block_pos = source_size;
 
         // Reallocate the unique pointer (plus space for null terminator).
-        temp_source_data.reset(new char[1 + source_size + block_size]);
+        temp_source_data = std::make_unique<char[]>(1 + source_size + block_size);
         std::memcpy(temp_source_data.get(), source_data.get(), source_size);
         std::swap(source_data, temp_source_data);
         source_size += block_size;
@@ -40,7 +40,7 @@ auto SourceFile::from_stream(std::FILE* stream, size_t hint_size)
 
         if(ncount < block_size)
         {
-            if(feof(stream))
+            if(std::feof(stream))
             {
                 source_size = block_pos + ncount;
                 break;

@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdio>
-#include <optional>
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <vector>
 
@@ -50,7 +50,7 @@ private:
 };
 
 // Assume SourceLocation and SourceRange are simple types,
-// thus they can get copied around with no fear.
+// thus it is cheap to copy them around.
 static_assert(sizeof(SourceLocation) <= sizeof(size_t)
               && std::is_trivially_copyable_v<SourceLocation>);
 static_assert(sizeof(SourceRange) <= 2 * sizeof(size_t)

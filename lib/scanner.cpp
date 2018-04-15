@@ -3,7 +3,6 @@
 
 namespace cminus
 {
-
 bool Scanner::is_letter(char c)
 {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -51,7 +50,7 @@ bool Scanner::lex_number(SourceLocation& out_pos)
 auto Scanner::next_word() -> std::optional<Word>
 {
     SourceLocation token_start;
-    
+
     // We'll use a few labels here. Consider this is an automaton.
     // Alternatives are recursion and a loop. Both cases were
     // discarded as they made things uglier than with labels.
@@ -62,7 +61,9 @@ next_word_again:
         case '\0':
             return std::nullopt;
 
-        case ' ': case '\t': case '\n':
+        case ' ':
+        case '\t':
+        case '\n':
             ++current_pos;
             while(is_space(*current_pos)) ++current_pos;
             goto next_word_again;
@@ -83,7 +84,7 @@ next_word_again:
 
                 // End of stream but no end of comment found.
                 diagman.report(source, token_start, Diag::lexer_unclosed_comment)
-                    .range(SourceRange(token_start, 2));
+                        .range(SourceRange(token_start, 2));
                 return std::nullopt;
             }
             return Word(Category::Divide, token_start, current_pos);
@@ -169,8 +170,9 @@ next_word_again:
             ++current_pos;
             return Word(Category::CloseCurly, token_start, current_pos);
 
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6':
-        case '7': case '8': case '9':
+        // clang-format off
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
             if(lex_number(current_pos))
             {
                 return Word(Category::Number, token_start, current_pos);
@@ -222,6 +224,7 @@ next_word_again:
             // this shall never happen because is_identifier cannot fail.
             cminus_unreachable();
             break;
+            // clang-format on
 
         invalid_char:
         default:
@@ -229,11 +232,10 @@ next_word_again:
             // We found a character that is not part of our alphabet.
             // Give a diagnostic and skip it.
             diagman.report(source, current_pos, Diag::lexer_bad_char)
-                .range(SourceRange(current_pos, 1));
+                    .range(SourceRange(current_pos, 1));
             ++current_pos;
             goto next_word_again;
         }
     }
 }
-
 }

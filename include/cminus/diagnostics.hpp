@@ -37,8 +37,10 @@ struct Diagnostic
     }
 };
 
-/// Helper for chain-building a `Diagnostic` and then propagating it
-/// to the desired `DiagnosticManager`.
+/// Helper for chain-building a `Diagnostic` and propagating it.
+///
+/// Use a `DiagnosticManager` to create a instance of this builder
+/// through a `.report` method call.
 class DiagnosticBuilder
 {
 public:
@@ -75,11 +77,7 @@ public:
     }
 
 private:
-    /// The manager that'll receive the diagnostic.
     DiagnosticManager& manager;
-
-    /// DiagnosticBuilder must be small, thus we use a pointer to the
-    /// diagnostic object instead of idrectly instantiation.
     std::unique_ptr<Diagnostic> diag_ptr;
 };
 
@@ -117,4 +115,7 @@ protected:
 private:
     std::function<bool(const Diagnostic&)> curr_diag_handler;
 };
+
+// The builder must be a small object.
+static_assert(sizeof(DiagnosticBuilder) <= 2 * sizeof(size_t));
 }

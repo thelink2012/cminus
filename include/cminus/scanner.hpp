@@ -43,8 +43,8 @@ enum class Category
 /// Classified word.
 struct Word
 {
-    const Category category;
-    const SourceRange lexeme;
+    Category category;
+    SourceRange lexeme;
 
     explicit Word(Category category, SourceRange lexeme) :
         category(category), lexeme(lexeme)

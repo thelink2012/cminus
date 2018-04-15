@@ -52,7 +52,7 @@ int lexico(std::FILE* istream, std::FILE* ostream)
     auto source = SourceFile::from_stream(istream);
     if(!source)
     {
-        perror("lexico: error");
+        std::perror("lexico: error");
         return 1;
     }
 
@@ -72,9 +72,9 @@ int lexico(std::FILE* istream, std::FILE* ostream)
     auto print_line = [&](unsigned line,
                           std::string_view catname,
                           std::string_view lexeme) {
-        fprintf(ostream, "(%u,%.*s,\"%.*s\")\n", line,
-                static_cast<int>(catname.size()), catname.data(),
-                static_cast<int>(lexeme.size()), lexeme.data());
+        std::fprintf(ostream, "(%u,%.*s,\"%.*s\")\n", line,
+                     static_cast<int>(catname.size()), catname.data(),
+                     static_cast<int>(lexeme.size()), lexeme.data());
     };
 
     Scanner scanner(*source, diagman);
@@ -82,7 +82,6 @@ int lexico(std::FILE* istream, std::FILE* ostream)
     {
         if(error)
             break;
-
         auto [line, column] = source->find_line_and_column(word->lexeme.begin());
         auto catname = category_to_string(word->category);
         print_line(line, catname, word->lexeme);
@@ -115,7 +114,7 @@ int main(int argc, char* argv[])
         if(ostream == nullptr)
         {
             ostream_guard.dismiss();
-            perror("lexico: error");
+            std::perror("lexico: error");
             return 1;
         }
     }
@@ -133,7 +132,7 @@ int main(int argc, char* argv[])
         if(istream == nullptr)
         {
             istream_guard.dismiss();
-            perror("lexico: error");
+            std::perror("lexico: error");
             return 1;
         }
     }
