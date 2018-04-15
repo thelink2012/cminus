@@ -4,13 +4,16 @@ matrix:
   include:
     - os: linux
       compiler: clang
+      addons:
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['libstdc++-7-dev']
     - os: linux
       addons:
         apt:
           sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++-7']
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 before_install:
