@@ -6,7 +6,6 @@
 /in
 /out
 
-
 # Created by https://www.gitignore.io/api/c++,vim
 
 ### C++ ###
@@ -40,7 +39,7 @@
 
 # Executables
 *.exe
-*.out
+#*.out
 *.app
 
 ### Vim ###
