@@ -1,3 +1,25 @@
+#include <cminus/parser.hpp>
+
+namespace cminus
+{
+void Parser::parse_simple_expression()
+{
+    parse_additive_expression();
+    
+    if(auto op_word = consume(Category::LessEqual, Category::Less,
+                              Category::Greater, Category::GreaterEqual,
+                              Category::Equal, Category::NotEqual))
+    {
+        parse_additive_expression();
+    }
+}
+
+void Parser::parse_additive_expression()
+{
+}
+
+}
+
 /*
 The following is a list of "challenges" for parsing the grammar provided by
 the assignment. The solutions are simple under recursive descendent parsing,

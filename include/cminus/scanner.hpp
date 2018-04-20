@@ -38,6 +38,8 @@ enum class Category
     CloseBracket,
     OpenCurly,
     CloseCurly,
+
+    Eof,
 };
 
 /// Classified word.
@@ -54,6 +56,12 @@ struct Word
     explicit Word(Category category, SourceLocation begin, SourceLocation end) :
         category(category), lexeme(begin, std::distance(begin, end))
     {
+    }
+
+    template<typename... Args>
+    bool is_any_of(Args&&... args) const
+    {
+        return (category == args || ...);
     }
 };
 
@@ -73,9 +81,12 @@ public:
     ///
     /// The scanner handles bad words to the best of its abilities,
     /// hence it never fails to return a word.
+    /// 
+    /// On end of stream it keeps returning a empty word categorized
+    /// as Category::Eof.
     ///
-    /// \returns the classified word or `std::nullopt` on end of code.
-    auto next_word() -> std::optional<Word>;
+    /// \returns the classified word.
+    auto next_word() -> Word;
 
 private:
     static bool is_letter(char c);
