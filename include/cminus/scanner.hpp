@@ -58,10 +58,15 @@ struct Word
     {
     }
 
+    /// \returns the starting location of this word.
+    SourceLocation location() const { return lexeme.begin(); }
+
+    /// \returns whether the category of this word is any of the specified ones.
     template<typename... Args>
     bool is_any_of(Args&&... args) const
     {
-        return (category == args || ...);
+        static_assert((std::is_same_v<std::decay_t<Args>, Category> && ...));
+        return ((category == args) || ...);
     }
 };
 
@@ -81,12 +86,15 @@ public:
     ///
     /// The scanner handles bad words to the best of its abilities,
     /// hence it never fails to return a word.
-    /// 
+    ///
     /// On end of stream it keeps returning a empty word categorized
     /// as Category::Eof.
     ///
     /// \returns the classified word.
     auto next_word() -> Word;
+
+    /// \returns the source file associated with this scanner.
+    const SourceFile& get_source() const { return source; }
 
 private:
     static bool is_letter(char c);

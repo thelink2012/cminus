@@ -24,7 +24,7 @@ auto SourceFile::from_stream(std::FILE* stream, size_t hint_size)
     size_t source_size = 0; //< not including null terminator
 
     // Add one to the hint_size so we can trigger EOF on the first iteration.
-    const size_t block_size = (hint_size == -1u ? 4096 : 1 + hint_size);
+    const size_t block_size = (hint_size == size_t(-1) ? 4096 : 1 + hint_size);
 
     while(true)
     {
