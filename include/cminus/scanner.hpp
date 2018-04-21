@@ -48,6 +48,11 @@ struct Word
     Category category;
     SourceRange lexeme;
 
+    explicit Word() :
+        category(Category::Eof), lexeme()
+    {
+    }
+
     explicit Word(Category category, SourceRange lexeme) :
         category(category), lexeme(lexeme)
     {

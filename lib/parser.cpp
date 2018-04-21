@@ -1,7 +1,8 @@
 #include <cminus/parser.hpp>
 
-// This is a recursive descent parser for the C- language. Two words of
+// This is a recursive descent parser for the C- language. Three words of
 // lookahead are used in order to archieve linear time predictive parsing.
+// We could reduce the lookahead, but this is small enough.
 //
 // The complete grammar for the language can be found at the very bottom of this file.
 
@@ -22,6 +23,61 @@ int32_t Parser::number_from_word(const Word& word)
                        Diag::parser_number_too_big)
                 .range(word.lexeme);
         return 0;
+    }
+}
+
+bool Parser::is_fundamental_type(const Word& word) const
+{
+    return word.category == Category::Void
+           || word.category == Category::Int;
+}
+
+// <program> ::= <declaration-list>
+// <declaration-list> ::= <declaration-list> <declaration> | <declaration>
+auto Parser::parse_program() -> std::shared_ptr<ASTProgram>
+{
+    auto program = std::make_shared<ASTProgram>();
+    while(peek_word.category != Category::Eof)
+    {
+        if(auto decl = parse_declaration())
+        {
+            program->add_decl(std::move(decl));
+        }
+        else
+        {
+            // TODO how do we recover?
+            return nullptr;
+        }
+    }
+    return program;
+}
+
+// <declaration> ::= <var-declaration> | <fun-declaration>
+auto Parser::parse_declaration() -> std::shared_ptr<ASTDecl>
+{
+    // TODO this is a stub
+    return parse_fun_declaration();
+}
+
+// <fun-declaration> ::= <type-specifier> ID ( <params> ) <compound-stmt>
+auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
+{
+    // TODO this is a stub
+    try_consume(Category::Void, Category::Int).value();
+    try_consume(Category::Identifier).value();
+    try_consume(Category::OpenParen).value();
+    try_consume(Category::Void).value();
+    try_consume(Category::CloseParen).value();
+    try_consume(Category::OpenCurly).value();
+    if(auto expr = parse_expression())
+    {
+        try_consume(Category::Semicolon).value();
+        try_consume(Category::CloseCurly).value();
+        return std::make_shared<ASTFunDecl>(std::move(expr)); // stub ctor
+    }
+    else
+    {
+        return nullptr;
     }
 }
 
@@ -90,7 +146,7 @@ auto Parser::parse_simple_expression() -> std::shared_ptr<ASTExpr>
 // <addop> ::= + | -
 auto Parser::parse_additive_expression() -> std::shared_ptr<ASTExpr>
 {
-    // This production has an simple left recursion. Though We may easily
+    // This production has an simple left recursion. Though we may easily
     // use tail recursive parsing to derive it.
     auto expr1 = parse_term();
     if(expr1)

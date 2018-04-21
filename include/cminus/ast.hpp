@@ -5,6 +5,9 @@ namespace cminus
 {
 class AST;
 class ASTExpr;
+class ASTDecl;
+class ASTProgram;
+class ASTFunDecl;
 class ASTBinaryExpr;
 class ASTAssignExpr;
 class ASTNumber;
@@ -34,8 +37,48 @@ public:
 /// Base of any expression node.
 class ASTExpr : public AST
 {
+};
+
+/// Base of any declaration node.
+class ASTDecl : public AST
+{
+};
+
+/// Node that represents an entire program.
+class ASTProgram : public AST
+{
 public:
-    virtual void dump(std::string&, size_t depth) = 0;
+    explicit ASTProgram()
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+    /// Adds a new declaration into the program.
+    void add_decl(std::shared_ptr<ASTDecl> decl)
+    {
+        assert(decl != nullptr);
+        decls.push_back(std::move(decl));
+    }
+
+private:
+    std::vector<std::shared_ptr<ASTDecl>> decls;
+};
+
+/// Node that represents a function declaration.
+class ASTFunDecl : public ASTDecl
+{
+public:
+    // THIS IS A STUB FOR TESTING!!!!!
+    explicit ASTFunDecl(std::shared_ptr<ASTExpr> test) :
+        test(std::move(test))
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    std::shared_ptr<ASTExpr> test;
 };
 
 /// Node of a binary expression in the AST.

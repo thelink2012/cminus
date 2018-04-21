@@ -33,12 +33,53 @@ static auto operation(ASTBinaryExpr::Operation op)
 
 static void newline(std::string& dest, size_t depth)
 {
-    dest.push_back('\n');
+    if(!dest.empty())
+        dest.push_back('\n');
     dest.append(2 * depth, ' ');
+}
+
+void ASTProgram::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += '[';
+    dest += "program";
+    dest += ' ';
+
+    for(auto& decl : decls)
+        decl->dump(dest, depth + 1);
+
+    newline(dest, depth);
+    dest += ']';
+}
+
+void ASTFunDecl::dump(std::string& dest, size_t depth)
+{
+    // STUB!!
+    newline(dest, depth);
+    dest += '[';
+    dest += "decfunc";
+    dest += ' ';
+    newline(dest, depth + 1);
+    dest += "[void]";
+    newline(dest, depth + 1);
+    dest += "[main]";
+    newline(dest, depth + 1);
+    dest += "[paramlist]";
+    newline(dest, depth + 1);
+    dest += "[block ";
+
+    test->dump(dest, depth + 2);
+
+    newline(dest, depth + 1);
+    dest += ']';
+
+    newline(dest, depth);
+    dest += ']';
 }
 
 void ASTBinaryExpr::dump(std::string& dest, size_t depth)
 {
+    newline(dest, depth);
     dest += '[';
     dest += operation(this->op);
     dest += ' ';

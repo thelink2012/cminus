@@ -26,7 +26,7 @@ int sintatico(std::FILE* istream, std::FILE* ostream)
     Scanner scanner(*source, diagman);
     Parser parser(scanner, diagman);
 
-    if(auto ast = parser.parse_expression())
+    if(auto ast = parser.parse_program())
     {
         if(!error)
         {
