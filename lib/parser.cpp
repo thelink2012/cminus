@@ -69,15 +69,23 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
     try_consume(Category::Void).value();
     try_consume(Category::CloseParen).value();
     try_consume(Category::OpenCurly).value();
-    if(auto expr = parse_expression())
+    std::vector<std::shared_ptr<ASTExpr>> test;
+    while(true)
     {
-        try_consume(Category::Semicolon).value();
-        try_consume(Category::CloseCurly).value();
-        return std::make_shared<ASTFunDecl>(std::move(expr)); // stub ctor
-    }
-    else
-    {
-        return nullptr;
+        if(auto expr = parse_expression())
+        {
+            if(!try_consume(Category::Semicolon))
+                return nullptr;
+            test.push_back(std::move(expr));
+            if(peek_word.category != Category::CloseCurly)
+                continue;
+            try_consume(Category::CloseCurly).value();
+            return std::make_shared<ASTFunDecl>(std::move(test)); // stub ctor
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 }
 

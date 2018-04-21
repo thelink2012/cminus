@@ -1,0 +1,9 @@
+[program 
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block [1]
+    ]
+  ]
+]

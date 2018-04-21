@@ -1,0 +1,13 @@
+[program 
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [+ 
+        [+ 
+          [+ [1] [2]] 
+          [+ [3] [4]]] [5]]
+    ]
+  ]
+]

@@ -68,7 +68,8 @@ void ASTFunDecl::dump(std::string& dest, size_t depth)
     newline(dest, depth + 1);
     dest += "[block ";
 
-    test->dump(dest, depth + 2);
+    for(auto& t : test)
+        t->dump(dest, depth + 2);
 
     newline(dest, depth + 1);
     dest += ']';

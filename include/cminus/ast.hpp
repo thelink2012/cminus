@@ -70,7 +70,7 @@ class ASTFunDecl : public ASTDecl
 {
 public:
     // THIS IS A STUB FOR TESTING!!!!!
-    explicit ASTFunDecl(std::shared_ptr<ASTExpr> test) :
+    explicit ASTFunDecl(std::vector<std::shared_ptr<ASTExpr>> test) :
         test(std::move(test))
     {
     }
@@ -78,7 +78,7 @@ public:
     virtual void dump(std::string&, size_t depth);
 
 private:
-    std::shared_ptr<ASTExpr> test;
+    std::vector<std::shared_ptr<ASTExpr>> test;
 };
 
 /// Node of a binary expression in the AST.

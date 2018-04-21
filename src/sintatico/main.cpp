@@ -19,7 +19,6 @@ int sintatico(std::FILE* istream, std::FILE* ostream)
 
     diagman.handler([&](const Diagnostic&) {
         error = true;
-        std::fprintf(stderr, "error\n");
         return true;
     });
 
