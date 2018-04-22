@@ -1,17 +1,24 @@
-#include <cminus/ast.hpp>
 #include <cminus/diagnostics.hpp>
 #include <cminus/scanner.hpp>
+#include <cminus/semantics.hpp>
 
 namespace cminus
 {
-/// The parser consumes a stream of words and spits the abstract
-/// syntax tree of the program.
+/// The parser tries to contruct a derivation in a grammar from a stream of
+/// lexed words. For each derived production, a syntax-directed action gets
+/// called to perform further processing, including the construction of an
+/// abstract syntax tree node for that derived production.
+///
+/// This is essentially a bridge between the scanner and the semantic
+/// analyzer.
 class Parser
 {
 public:
     explicit Parser(Scanner& scanner,
+                    Semantics& sema,
                     DiagnosticManager& diagman) :
         scanner(scanner),
+        sema(sema),
         diagman(diagman)
     {
         peek_word = scanner.next_word();
@@ -28,15 +35,12 @@ private:
     auto parse_term() -> std::shared_ptr<ASTExpr>;
     auto parse_factor() -> std::shared_ptr<ASTExpr>;
     auto parse_number() -> std::shared_ptr<ASTNumber>;
-    auto parse_var() -> std::shared_ptr<ASTVar>;
-    auto parse_call() -> std::shared_ptr<ASTCall>;
+    auto parse_var() -> std::shared_ptr<ASTVarRef>;
+    auto parse_call() -> std::shared_ptr<ASTFunCall>;
 
     // the following are stubs for testing
     auto parse_declaration() -> std::shared_ptr<ASTDecl>;
     auto parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>;
-
-    int32_t number_from_word(const Word&);
-    bool is_fundamental_type(const Word&) const;
 
     /// Looks ahead in the stream by N words.
     ///
@@ -77,6 +81,7 @@ private:
 
 private:
     Scanner& scanner;
+    Semantics& sema;
     DiagnosticManager& diagman;
 
     /// The next word to be consumed from the stream.

@@ -11,8 +11,8 @@ class ASTFunDecl;
 class ASTBinaryExpr;
 class ASTAssignExpr;
 class ASTNumber;
-class ASTVar;
-class ASTCall;
+class ASTVarRef;
+class ASTFunCall;
 
 /// Base of any AST node.
 class AST : public std::enable_shared_from_this<AST>
@@ -129,7 +129,7 @@ public:
                            std::shared_ptr<ASTExpr> right) :
         ASTBinaryExpr(std::move(left), std::move(right), Operation::Assign)
     {
-        assert(left->is<ASTVar>());
+        assert(left->is<ASTVarRef>());
     }
 };
 
@@ -148,15 +148,15 @@ private:
     int32_t value;
 };
 
-/// Node of a variable in the AST.
-class ASTVar : public ASTExpr
+/// Node of a variable reference in the AST.
+class ASTVarRef : public ASTExpr
 {
 public:
     virtual void dump(std::string&, size_t depth);
 };
 
 /// Node of a function call in the AST.
-class ASTCall : public ASTExpr
+class ASTFunCall : public ASTExpr
 {
 public:
     virtual void dump(std::string&, size_t depth);

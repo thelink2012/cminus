@@ -1,3 +1,4 @@
+#include <cminus/semantics.hpp>
 #include <cminus/parser.hpp>
 #include <cminus/scanner.hpp>
 #include <cminus/utility/contracts.hpp>
@@ -23,7 +24,8 @@ int sintatico(std::FILE* istream, std::FILE* ostream)
     });
 
     Scanner scanner(*source, diagman);
-    Parser parser(scanner, diagman);
+    Semantics sema(*source, diagman);
+    Parser parser(scanner, sema, diagman);
 
     if(auto ast = parser.parse_program())
     {

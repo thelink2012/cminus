@@ -8,40 +8,16 @@
 
 namespace cminus
 {
-int32_t Parser::number_from_word(const Word& word)
-{
-    assert(word.category == Category::Number);
-    try
-    {
-        // TODO use std::from_chars once it's available in libstdc++
-        std::string lexeme(word.lexeme.begin(), word.lexeme.size());
-        return std::stoi(lexeme, nullptr, 10);
-    }
-    catch(const std::out_of_range&)
-    {
-        diagman.report(scanner.get_source(), word.location(),
-                       Diag::parser_number_too_big)
-                .range(word.lexeme);
-        return 0;
-    }
-}
-
-bool Parser::is_fundamental_type(const Word& word) const
-{
-    return word.category == Category::Void
-           || word.category == Category::Int;
-}
-
 // <program> ::= <declaration-list>
 // <declaration-list> ::= <declaration-list> <declaration> | <declaration>
 auto Parser::parse_program() -> std::shared_ptr<ASTProgram>
 {
-    auto program = std::make_shared<ASTProgram>();
+    auto program = sema.act_on_program_start();
     while(peek_word.category != Category::Eof)
     {
         if(auto decl = parse_declaration())
         {
-            program->add_decl(std::move(decl));
+            sema.act_on_decl(program, std::move(decl));
         }
         else
         {
@@ -49,7 +25,7 @@ auto Parser::parse_program() -> std::shared_ptr<ASTProgram>
             return nullptr;
         }
     }
-    return program;
+    return sema.act_on_program_end(program);
 }
 
 // <declaration> ::= <var-declaration> | <fun-declaration>
@@ -104,11 +80,11 @@ auto Parser::parse_expression() -> std::shared_ptr<ASTExpr>
         // by an '=' token in the lookahead, it stops and derives the <var>.
         //
         // Our job is, then, to eat the '=' token and derive the assignment into <var>.
-        if(expr1->is<ASTVar>() && try_consume(Category::Assign))
+        if(expr1->is<ASTVarRef>() && try_consume(Category::Assign))
         {
             if(auto expr2 = parse_expression())
             {
-                return std::make_shared<ASTAssignExpr>(expr1, expr2);
+                return sema.act_on_assign(expr1, expr2);
             }
             else
             {
@@ -132,10 +108,9 @@ auto Parser::parse_simple_expression() -> std::shared_ptr<ASTExpr>
                                       Category::Greater, Category::GreaterEqual,
                                       Category::Equal, Category::NotEqual))
         {
-            auto type = ASTBinaryExpr::type_from_category(op_word->category);
             if(auto expr2 = parse_additive_expression())
             {
-                return std::make_shared<ASTBinaryExpr>(expr1, expr2, type);
+                return sema.act_on_binary_expr(expr1, expr2, op_word->category);
             }
             else
             {
@@ -161,11 +136,9 @@ auto Parser::parse_additive_expression() -> std::shared_ptr<ASTExpr>
     {
         while(auto op_word = try_consume(Category::Plus, Category::Minus))
         {
-            auto type = ASTBinaryExpr::type_from_category(op_word->category);
             if(auto expr2 = parse_term())
             {
-                auto new_node = std::make_shared<ASTBinaryExpr>(expr1, expr2, type);
-                expr1 = std::move(new_node);
+                expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
             }
             else
             {
@@ -186,11 +159,9 @@ auto Parser::parse_term() -> std::shared_ptr<ASTExpr>
     {
         while(auto op_word = try_consume(Category::Multiply, Category::Divide))
         {
-            auto type = ASTBinaryExpr::type_from_category(op_word->category);
             if(auto expr2 = parse_factor())
             {
-                auto new_node = std::make_shared<ASTBinaryExpr>(expr1, expr2, type);
-                expr1 = std::move(new_node);
+                expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
             }
             else
             {
@@ -259,8 +230,7 @@ auto Parser::parse_number() -> std::shared_ptr<ASTNumber>
 {
     if(auto word = try_consume(Category::Number))
     {
-        auto number = this->number_from_word(*word);
-        return std::make_shared<ASTNumber>(number);
+        return sema.act_on_number(*word);
     }
     else
     {
@@ -271,14 +241,14 @@ auto Parser::parse_number() -> std::shared_ptr<ASTNumber>
 }
 
 // <var> ::= ID | ID [ <expression> ]
-auto Parser::parse_var() -> std::shared_ptr<ASTVar>
+auto Parser::parse_var() -> std::shared_ptr<ASTVarRef>
 {
     // TODO once we have variable decls.
     return nullptr;
 }
 
 // <call> ::= ID ( <args> )
-auto Parser::parse_call() -> std::shared_ptr<ASTCall>
+auto Parser::parse_call() -> std::shared_ptr<ASTFunCall>
 {
     // TODO once we have function decls
     return nullptr;

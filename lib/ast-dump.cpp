@@ -99,12 +99,12 @@ void ASTNumber::dump(std::string& dest, size_t depth)
     dest += ']';
 }
 
-void ASTVar::dump(std::string& dest, size_t depth)
+void ASTVarRef::dump(std::string& dest, size_t depth)
 {
     // TODO
 }
 
-void ASTCall::dump(std::string& dest, size_t depth)
+void ASTFunCall::dump(std::string& dest, size_t depth)
 {
     // TODO
 }
