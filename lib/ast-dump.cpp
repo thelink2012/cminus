@@ -101,7 +101,13 @@ void ASTNumber::dump(std::string& dest, size_t depth)
 
 void ASTVarRef::dump(std::string& dest, size_t depth)
 {
-    // TODO
+    dest += '[';
+    dest += this->varname;
+    if(this->expr)
+    {
+        this->expr->dump(dest, depth+1);
+    }
+    dest += ']';
 }
 
 void ASTFunCall::dump(std::string& dest, size_t depth)

@@ -244,7 +244,29 @@ auto Parser::parse_number() -> std::shared_ptr<ASTNumber>
 auto Parser::parse_var() -> std::shared_ptr<ASTVarRef>
 {
     // TODO once we have variable decls.
-    return nullptr;
+    auto id = try_consume(Category::Identifier);
+    if(!id)
+    {
+        // TODO call diagman with an error
+        return nullptr;
+    }
+    if(!try_consume(Category::OpenBracket))
+    {
+        return std::make_shared<ASTVarRef>(id->lexeme);
+    }
+
+    auto expr1 = parse_expression();
+    if(!expr1)
+    {
+        return nullptr;
+    }
+
+    if(!try_consume(Category::CloseBracket))
+    {
+        // TODO call diagman with an error
+        return nullptr;
+    }
+    return std::make_shared<ASTVarRef>(id->lexeme, expr1);
 }
 
 // <call> ::= ID ( <args> )

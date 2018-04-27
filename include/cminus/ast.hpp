@@ -152,7 +152,19 @@ private:
 class ASTVarRef : public ASTExpr
 {
 public:
+    explicit ASTVarRef(SourceRange varname) :
+        varname(varname)
+    {}
+
+    explicit ASTVarRef(SourceRange varname, std::shared_ptr<ASTExpr> expr) :
+        varname(varname), expr(expr)
+    {}
+
     virtual void dump(std::string&, size_t depth);
+
+private:
+    SourceRange varname;
+    std::shared_ptr<ASTExpr> expr;
 };
 
 /// Node of a function call in the AST.
