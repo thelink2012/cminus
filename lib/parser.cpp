@@ -134,7 +134,8 @@ auto Parser::parse_expression() -> std::shared_ptr<ASTExpr>
         {
             if(auto expr2 = parse_expression())
             {
-                return sema.act_on_assign(expr1, expr2);
+                auto lvalue = std::static_pointer_cast<ASTVarRef>(expr1);
+                return sema.act_on_assign(std::move(lvalue), expr2);
             }
             else
             {

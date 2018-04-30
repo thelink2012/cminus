@@ -1,0 +1,11 @@
+[program 
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [assign [x] 
+        [< [y] [2]]] 
+    ]
+  ]
+]

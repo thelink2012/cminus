@@ -28,6 +28,7 @@ public:
     bool is() const
     {
         // TODO use static information instead of RTTI.
+        // TODO think about hierarchy checking when static!?
         if(dynamic_cast<std::add_pointer_t<const T>>(this))
             return true;
         return false;
@@ -97,6 +98,42 @@ private:
     std::vector<std::shared_ptr<ASTExpr>> test;
 };
 
+/// Node of a number.
+class ASTNumber : public ASTExpr
+{
+public:
+    explicit ASTNumber(int32_t number) :
+        value(number)
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    int32_t value;
+};
+
+/// Node of a variable reference in the AST.
+class ASTVarRef : public ASTExpr
+{
+public:
+    explicit ASTVarRef(SourceRange varname) :
+        varname(varname)
+    {
+    }
+
+    explicit ASTVarRef(SourceRange varname, std::shared_ptr<ASTExpr> expr) :
+        varname(varname), expr(expr)
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    SourceRange varname;
+    std::shared_ptr<ASTExpr> expr;
+};
+
 /// Node of a binary expression in the AST.
 class ASTBinaryExpr : public ASTExpr
 {
@@ -141,49 +178,13 @@ private:
 class ASTAssignExpr : public ASTBinaryExpr
 {
 public:
-    explicit ASTAssignExpr(std::shared_ptr<ASTExpr> left,
+    explicit ASTAssignExpr(std::shared_ptr<ASTVarRef> left,
                            std::shared_ptr<ASTExpr> right) :
         ASTBinaryExpr(std::move(left), std::move(right), Operation::Assign)
     {
-        assert(left->is<ASTVarRef>());
     }
 };
 
-/// Node of a number.
-class ASTNumber : public ASTExpr
-{
-public:
-    explicit ASTNumber(int32_t number) :
-        value(number)
-    {
-    }
-
-    virtual void dump(std::string&, size_t depth);
-
-private:
-    int32_t value;
-};
-
-/// Node of a variable reference in the AST.
-class ASTVarRef : public ASTExpr
-{
-public:
-    explicit ASTVarRef(SourceRange varname) :
-        varname(varname)
-    {
-    }
-
-    explicit ASTVarRef(SourceRange varname, std::shared_ptr<ASTExpr> expr) :
-        varname(varname), expr(expr)
-    {
-    }
-
-    virtual void dump(std::string&, size_t depth);
-
-private:
-    SourceRange varname;
-    std::shared_ptr<ASTExpr> expr;
-};
 
 /// Node of a function call in the AST.
 class ASTFunCall : public ASTExpr

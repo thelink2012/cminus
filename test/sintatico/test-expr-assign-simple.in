@@ -1,0 +1,6 @@
+void main(void)
+{
+    x = y;
+    x = 10;
+    x = (1 + 2) * y;
+}

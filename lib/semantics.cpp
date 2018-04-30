@@ -51,7 +51,7 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
     return new_decl;
 }
 
-auto Semantics::act_on_assign(std::shared_ptr<ASTExpr> lhs,
+auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                               std::shared_ptr<ASTExpr> rhs)
         -> std::shared_ptr<ASTAssignExpr>
 {

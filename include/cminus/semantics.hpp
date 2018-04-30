@@ -49,7 +49,7 @@ public:
             -> std::shared_ptr<ASTVarDecl>;
 
     /// Acts on an assignment expression.
-    auto act_on_assign(std::shared_ptr<ASTExpr> lhs,
+    auto act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                        std::shared_ptr<ASTExpr> rhs)
             -> std::shared_ptr<ASTAssignExpr>;
 

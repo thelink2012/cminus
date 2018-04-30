@@ -1,0 +1,17 @@
+[program 
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [assign [x] 
+        [assign [y] [10]]] 
+      [assign [x] 
+        [assign [y] [arr [0]]]] 
+      [assign [arr [0]] 
+        [assign [y] 
+          [assign [x] 
+            [* [10] [x]]]]] 
+    ]
+  ]
+]
