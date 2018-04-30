@@ -3,10 +3,7 @@
     [void]
     [foo]
     [paramlist 
-      [decparm [a]]
-      [decparm [b]]
-      [decparm [c]]
-    ]
+      [decparm [a]]]
     [block 
     ]
   ]

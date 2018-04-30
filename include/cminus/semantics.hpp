@@ -54,6 +54,10 @@ public:
                          std::shared_ptr<ASTCompoundStmt> comp_stmt)
             -> std::shared_ptr<ASTFunDecl>;
 
+    /// Acts on the declaration of a parameter.
+    auto act_on_param_decl(const Word& type, const Word& name, bool is_array)
+            -> std::shared_ptr<ASTParmVarDecl>;
+
     /// Acts on an assignment expression.
     auto act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                        std::shared_ptr<ASTExpr> rhs)

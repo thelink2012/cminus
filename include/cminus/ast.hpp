@@ -77,22 +77,35 @@ private:
 class ASTVarDecl : public ASTDecl
 {
 public:
-    explicit ASTVarDecl(SourceRange name, std::shared_ptr<ASTNumber> size) :
-        name(name), array_size(std::move(size))
+    explicit ASTVarDecl(SourceRange name,
+                        std::shared_ptr<ASTNumber> array_size) :
+        ASTVarDecl(name, !!array_size, std::move(array_size))
+    {
+    }
+
+    explicit ASTVarDecl(SourceRange name, bool is_array,
+                        std::shared_ptr<ASTNumber> array_size) :
+        name(name), array_size(std::move(array_size)), is_array(is_array)
     {
     }
 
     virtual void dump(std::string&, size_t depth);
 
-private:
+protected:
     SourceRange name;
-    std::shared_ptr<ASTNumber> array_size; //< may be null
+    std::shared_ptr<ASTNumber> array_size; //< may be null, even if is_array=true
+    bool is_array;
 };
 
 /// Node that represents a variable declaration in a function param list.
 class ASTParmVarDecl : public ASTVarDecl
 {
-    // TODO
+public:
+    explicit ASTParmVarDecl(SourceRange name, bool is_array) :
+        ASTVarDecl(name, is_array, nullptr)
+    {}
+
+    virtual void dump(std::string&, size_t depth);
 };
 
 /// Node that represents a function declaration.

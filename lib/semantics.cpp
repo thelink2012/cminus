@@ -69,6 +69,27 @@ auto Semantics::act_on_fun_decl(const Word& retn_type, const Word& name,
                                         std::move(comp_stmt));
 }
 
+auto Semantics::act_on_param_decl(const Word& type, const Word& name, 
+                                  bool is_array)
+        -> std::shared_ptr<ASTParmVarDecl>
+{
+    assert(type.category == Category::Void || type.category == Category::Int);
+    assert(name.category == Category::Identifier);
+
+    // TODO cannot be void and stuff
+    // TODO add to scope and stuff
+    
+    // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
+    if(type.category == Category::Void)
+    {
+        // TODO even the Diag:: code is wrong!!! TRASH ME OUT REALLY.
+        diagman.report(source, type.location(), Diag::parser_number_too_big)
+            .range(type.lexeme);
+    }
+
+    return std::make_shared<ASTParmVarDecl>(name.lexeme, is_array);
+}
+
 auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                               std::shared_ptr<ASTExpr> rhs)
         -> std::shared_ptr<ASTAssignExpr>

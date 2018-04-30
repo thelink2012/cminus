@@ -59,10 +59,27 @@ void ASTVarDecl::dump(std::string& dest, size_t depth)
     dest += "decvar";
     dest += ' ';
     dest += this->name;
-    if(this->array_size)
+    if(this->is_array)
     {
+        assert(this->array_size != nullptr);
         dest += ' ';
         this->array_size->dump(dest, depth + 1);
+    }
+    dest += ']';
+}
+
+void ASTParmVarDecl::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += '[';
+    dest += "decparm";
+    dest += ' ';
+    dest += '[';
+    dest += this->name;
+    dest += ']';
+    if(this->is_array)
+    {
+        dest += " [array]";
     }
     dest += ']';
 }

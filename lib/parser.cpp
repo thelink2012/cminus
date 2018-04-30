@@ -156,8 +156,32 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
 // <param> ::= <type-specifier> ID | <type-specifier> ID [ ] 
 auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 {
-    // TODO
-    return nullptr;
+    auto type = try_consume(Category::Void, Category::Int);
+    if(!type)
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    auto id = try_consume(Category::Identifier);
+    if(!id)
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    bool is_array = false;
+    if(try_consume(Category::OpenBracket))
+    {
+        is_array = true;
+        if(!try_consume(Category::CloseBracket))
+        {
+            // TODO diag
+            return nullptr;
+        }
+    }
+
+    return sema.act_on_param_decl(*type, *id, is_array);
 }
 
 // <compound-stmt> ::= { <local-declarations> <statement-list> }
