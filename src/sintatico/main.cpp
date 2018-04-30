@@ -1,6 +1,6 @@
-#include <cminus/semantics.hpp>
 #include <cminus/parser.hpp>
 #include <cminus/scanner.hpp>
+#include <cminus/semantics.hpp>
 #include <cminus/utility/contracts.hpp>
 #include <cminus/utility/scope_guard.hpp>
 #include <cstring>

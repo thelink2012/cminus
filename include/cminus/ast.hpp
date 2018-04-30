@@ -71,7 +71,8 @@ class ASTVarDecl : public ASTDecl
 public:
     explicit ASTVarDecl(SourceRange name, std::shared_ptr<ASTNumber> size) :
         name(name), array_size(std::move(size))
-    {}
+    {
+    }
 
     virtual void dump(std::string&, size_t depth);
 
@@ -169,11 +170,13 @@ class ASTVarRef : public ASTExpr
 public:
     explicit ASTVarRef(SourceRange varname) :
         varname(varname)
-    {}
+    {
+    }
 
     explicit ASTVarRef(SourceRange varname, std::shared_ptr<ASTExpr> expr) :
         varname(varname), expr(expr)
-    {}
+    {
+    }
 
     virtual void dump(std::string&, size_t depth);
 
@@ -188,5 +191,4 @@ class ASTFunCall : public ASTExpr
 public:
     virtual void dump(std::string&, size_t depth);
 };
-
 }

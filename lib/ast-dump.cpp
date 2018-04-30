@@ -62,7 +62,7 @@ void ASTVarDecl::dump(std::string& dest, size_t depth)
     if(this->array_size)
     {
         dest += ' ';
-        this->array_size->dump(dest, depth+1);
+        this->array_size->dump(dest, depth + 1);
     }
     dest += ']';
 }
@@ -120,7 +120,7 @@ void ASTVarRef::dump(std::string& dest, size_t depth)
     dest += this->varname;
     if(this->expr)
     {
-        this->expr->dump(dest, depth+1);
+        this->expr->dump(dest, depth + 1);
     }
     dest += ']';
 }

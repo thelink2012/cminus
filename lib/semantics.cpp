@@ -7,9 +7,10 @@ namespace cminus
 {
 Semantics::Semantics(const SourceFile& source_a,
                      DiagnosticManager& diagman_a) :
-     source(source_a), diagman(diagman_a)
+    source(source_a),
+    diagman(diagman_a)
 {
-   this->current_scope = std::make_unique<Scope>();
+    this->current_scope = std::make_unique<Scope>();
 }
 
 auto Semantics::act_on_program_start() -> std::shared_ptr<ASTProgram>
@@ -18,7 +19,7 @@ auto Semantics::act_on_program_start() -> std::shared_ptr<ASTProgram>
 }
 
 auto Semantics::act_on_program_end(std::shared_ptr<ASTProgram> program)
-   -> std::shared_ptr<ASTProgram>
+        -> std::shared_ptr<ASTProgram>
 {
     return program;
 }
@@ -31,28 +32,28 @@ void Semantics::act_on_decl(const std::shared_ptr<ASTProgram>& program,
 
 auto Semantics::act_on_var_decl(const Word& type, const Word& name,
                                 std::shared_ptr<ASTNumber> array_size)
-   -> std::shared_ptr<ASTVarDecl>
+        -> std::shared_ptr<ASTVarDecl>
 {
-   assert(type.category == Category::Void || type.category == Category::Int);
-   assert(name.category == Category::Identifier);
+    assert(type.category == Category::Void || type.category == Category::Int);
+    assert(name.category == Category::Identifier);
 
-   // TODO semantically a var decl cannot be void
+    // TODO semantically a var decl cannot be void
 
-   auto new_decl = std::make_shared<ASTVarDecl>(name.lexeme, std::move(array_size));
+    auto new_decl = std::make_shared<ASTVarDecl>(name.lexeme, std::move(array_size));
 
-   auto [decl, inserted]  = current_scope->add_decl(name.lexeme, new_decl);
-   if(!inserted)
-   {
-      // TODO this is a semantic error (redecl)
-   }
+    auto [decl, inserted] = current_scope->add_decl(name.lexeme, new_decl);
+    if(!inserted)
+    {
+        // TODO this is a semantic error (redecl)
+    }
 
-   // Return the new declaration no matter what.
-   return new_decl;
+    // Return the new declaration no matter what.
+    return new_decl;
 }
 
 auto Semantics::act_on_assign(std::shared_ptr<ASTExpr> lhs,
                               std::shared_ptr<ASTExpr> rhs)
-    -> std::shared_ptr<ASTAssignExpr>
+        -> std::shared_ptr<ASTAssignExpr>
 {
     return std::make_shared<ASTAssignExpr>(std::move(lhs), std::move(rhs));
 }
@@ -60,14 +61,14 @@ auto Semantics::act_on_assign(std::shared_ptr<ASTExpr> lhs,
 auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
                                    std::shared_ptr<ASTExpr> rhs,
                                    Category category)
-   -> std::shared_ptr<ASTBinaryExpr>
+        -> std::shared_ptr<ASTBinaryExpr>
 {
     auto type = ASTBinaryExpr::type_from_category(category);
     return std::make_shared<ASTBinaryExpr>(std::move(lhs), std::move(rhs), type);
 }
 
 auto Semantics::act_on_number(const Word& word)
-   -> std::shared_ptr<ASTNumber>
+        -> std::shared_ptr<ASTNumber>
 {
     auto number = number_from_word(word);
     return std::make_shared<ASTNumber>(number);
