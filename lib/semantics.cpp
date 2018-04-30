@@ -5,6 +5,13 @@
 
 namespace cminus
 {
+Semantics::Semantics(const SourceFile& source_a,
+                     DiagnosticManager& diagman_a) :
+     source(source_a), diagman(diagman_a)
+{
+   this->current_scope = std::make_unique<Scope>();
+}
+
 auto Semantics::act_on_program_start() -> std::shared_ptr<ASTProgram>
 {
     return std::make_shared<ASTProgram>();
@@ -20,6 +27,27 @@ void Semantics::act_on_decl(const std::shared_ptr<ASTProgram>& program,
                             std::shared_ptr<ASTDecl> decl)
 {
     program->add_decl(std::move(decl));
+}
+
+auto Semantics::act_on_var_decl(const Word& type, const Word& name,
+                                std::shared_ptr<ASTNumber> array_size)
+   -> std::shared_ptr<ASTVarDecl>
+{
+   assert(type.category == Category::Void || type.category == Category::Int);
+   assert(name.category == Category::Identifier);
+
+   // TODO semantically a var decl cannot be void
+
+   auto new_decl = std::make_shared<ASTVarDecl>(name.lexeme, std::move(array_size));
+
+   auto [decl, inserted]  = current_scope->add_decl(name.lexeme, new_decl);
+   if(!inserted)
+   {
+      // TODO this is a semantic error (redecl)
+   }
+
+   // Return the new declaration no matter what.
+   return new_decl;
 }
 
 auto Semantics::act_on_assign(std::shared_ptr<ASTExpr> lhs,

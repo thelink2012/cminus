@@ -1,0 +1,10 @@
+[program 
+  [decvar var1 [10]]
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+    ]
+  ]
+]

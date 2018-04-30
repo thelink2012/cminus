@@ -65,6 +65,21 @@ private:
     std::vector<std::shared_ptr<ASTDecl>> decls;
 };
 
+// Node that represents a variable declaration.
+class ASTVarDecl : public ASTDecl
+{
+public:
+    explicit ASTVarDecl(SourceRange name, std::shared_ptr<ASTNumber> size) :
+        name(name), array_size(std::move(size))
+    {}
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    SourceRange name;
+    std::shared_ptr<ASTNumber> array_size; //< may be null
+};
+
 /// Node that represents a function declaration.
 class ASTFunDecl : public ASTDecl
 {
@@ -173,4 +188,5 @@ class ASTFunCall : public ASTExpr
 public:
     virtual void dump(std::string&, size_t depth);
 };
+
 }

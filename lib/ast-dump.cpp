@@ -52,6 +52,21 @@ void ASTProgram::dump(std::string& dest, size_t depth)
     dest += ']';
 }
 
+void ASTVarDecl::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += '[';
+    dest += "decvar";
+    dest += ' ';
+    dest += this->name;
+    if(this->array_size)
+    {
+        dest += ' ';
+        this->array_size->dump(dest, depth+1);
+    }
+    dest += ']';
+}
+
 void ASTFunDecl::dump(std::string& dest, size_t depth)
 {
     // STUB!!

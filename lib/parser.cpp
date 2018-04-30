@@ -31,8 +31,57 @@ auto Parser::parse_program() -> std::shared_ptr<ASTProgram>
 // <declaration> ::= <var-declaration> | <fun-declaration>
 auto Parser::parse_declaration() -> std::shared_ptr<ASTDecl>
 {
-    // TODO this is a stub
-    return parse_fun_declaration();
+    // The common prefix of a var-declaration and a fun-declaration
+    // is the type-specifier (always atomic) and the identifier (also atomic).
+    // Thus we can just lookahaed three words to check whether this is an
+    // open paren, meaning a function declaration.
+    if(lookahead(2).category == Category::OpenParen)
+        return parse_fun_declaration();
+    else
+        return parse_var_declaration();
+}
+
+// <var-declaration> ::= <type-specifier> ID ; | <type-specifier> ID [ NUM ] ;
+// <type-specifier> ::= int | void
+auto Parser::parse_var_declaration() -> std::shared_ptr<ASTVarDecl>
+{
+    auto type = try_consume(Category::Void, Category::Int);
+    if(!type)
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    auto id = try_consume(Category::Identifier);
+    if(!id)
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    std::shared_ptr<ASTNumber> num;
+    if(peek_word.category == Category::OpenBracket)
+    {
+        consume();
+
+        num = parse_number();
+        if(!num)
+            return nullptr;
+
+        if(!try_consume(Category::CloseBracket))
+        {
+            // TODO diag
+            return nullptr;
+        }
+    }
+
+    if(!try_consume(Category::Semicolon))
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    return sema.act_on_var_decl(*type, *id, std::move(num));
 }
 
 // <fun-declaration> ::= <type-specifier> ID ( <params> ) <compound-stmt>
@@ -48,15 +97,16 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
     std::vector<std::shared_ptr<ASTExpr>> test;
     while(true)
     {
-        if(auto expr = parse_expression())
+        if(peek_word.category == Category::CloseCurly)
+        {
+            consume();
+            return std::make_shared<ASTFunDecl>(std::move(test)); // stub ctor
+        }
+        else if(auto expr = parse_expression())
         {
             if(!try_consume(Category::Semicolon))
                 return nullptr;
             test.push_back(std::move(expr));
-            if(peek_word.category != Category::CloseCurly)
-                continue;
-            try_consume(Category::CloseCurly).value();
-            return std::make_shared<ASTFunDecl>(std::move(test)); // stub ctor
         }
         else
         {
@@ -243,29 +293,32 @@ auto Parser::parse_number() -> std::shared_ptr<ASTNumber>
 // <var> ::= ID | ID [ <expression> ]
 auto Parser::parse_var() -> std::shared_ptr<ASTVarRef>
 {
-    // TODO once we have variable decls.
     auto id = try_consume(Category::Identifier);
     if(!id)
     {
         // TODO call diagman with an error
         return nullptr;
     }
-    if(!try_consume(Category::OpenBracket))
+
+    std::shared_ptr<ASTExpr> expr1;
+    if(peek_word.category == Category::OpenBracket)
     {
-        return std::make_shared<ASTVarRef>(id->lexeme);
+        consume();
+
+        expr1 = parse_expression();
+        if(!expr1)
+        {
+            return nullptr;
+        }
+
+        if(!try_consume(Category::CloseBracket))
+        {
+            // TODO call diagman with an error
+            return nullptr;
+        }
     }
 
-    auto expr1 = parse_expression();
-    if(!expr1)
-    {
-        return nullptr;
-    }
-
-    if(!try_consume(Category::CloseBracket))
-    {
-        // TODO call diagman with an error
-        return nullptr;
-    }
+    // TODO use sema to build node
     return std::make_shared<ASTVarRef>(id->lexeme, expr1);
 }
 
