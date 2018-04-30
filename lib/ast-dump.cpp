@@ -84,7 +84,10 @@ void ASTFunDecl::dump(std::string& dest, size_t depth)
     dest += "[block ";
 
     for(auto& t : test)
+    {
         t->dump(dest, depth + 2);
+        dest += ' ';
+    }
 
     newline(dest, depth + 1);
     dest += ']';
@@ -120,6 +123,7 @@ void ASTVarRef::dump(std::string& dest, size_t depth)
     dest += this->varname;
     if(this->expr)
     {
+        dest += ' ';
         this->expr->dump(dest, depth + 1);
     }
     dest += ']';

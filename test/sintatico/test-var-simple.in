@@ -1,0 +1,9 @@
+void main(void)
+{
+    x;
+    y;
+    arr; /* semantically bad */
+    arr[1];
+    arr[x];
+    arr[x+2];
+}

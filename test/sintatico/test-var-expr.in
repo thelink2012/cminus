@@ -1,0 +1,4 @@
+void main(void)
+{
+    x * y - 4 / z + w * (k + 2) + j[10] - j[x] - j[x-2];
+}
