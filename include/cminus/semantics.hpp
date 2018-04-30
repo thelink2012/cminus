@@ -39,9 +39,8 @@ public:
             -> std::shared_ptr<ASTProgram>;
 
     /// Acts on a program-level declaration.
-    // TODO remove
-    void act_on_decl(const std::shared_ptr<ASTProgram>& program,
-                     std::shared_ptr<ASTDecl> decl);
+    void act_on_top_level_decl(const std::shared_ptr<ASTProgram>& program,
+                               std::shared_ptr<ASTDecl> decl);
 
     /// Acts on the declaration of a new variable.
     auto act_on_var_decl(const Word& type, const Word& name,

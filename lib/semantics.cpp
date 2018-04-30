@@ -24,8 +24,9 @@ auto Semantics::act_on_program_end(std::shared_ptr<ASTProgram> program)
     return program;
 }
 
-void Semantics::act_on_decl(const std::shared_ptr<ASTProgram>& program,
-                            std::shared_ptr<ASTDecl> decl)
+void Semantics::act_on_top_level_decl(
+        const std::shared_ptr<ASTProgram>& program,
+        std::shared_ptr<ASTDecl> decl)
 {
     program->add_decl(std::move(decl));
 }

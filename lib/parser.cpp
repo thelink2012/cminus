@@ -17,11 +17,11 @@ auto Parser::parse_program() -> std::shared_ptr<ASTProgram>
     {
         if(auto decl = parse_declaration())
         {
-            sema.act_on_decl(program, std::move(decl));
+            sema.act_on_top_level_decl(program, std::move(decl));
         }
         else
         {
-            // TODO how do we recover?
+            // TODO we can recover, how?
             return nullptr;
         }
     }
