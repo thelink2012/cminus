@@ -6,6 +6,7 @@ namespace cminus
 class AST;
 class ASTExpr;
 class ASTDecl;
+class ASTStmt;
 class ASTProgram;
 class ASTFunDecl;
 class ASTBinaryExpr;
@@ -13,6 +14,7 @@ class ASTAssignExpr;
 class ASTNumber;
 class ASTVarRef;
 class ASTFunCall;
+class ASTCompoundStmt;
 
 /// Base of any AST node.
 class AST : public std::enable_shared_from_this<AST>
@@ -42,6 +44,11 @@ class ASTExpr : public AST
 
 /// Base of any declaration node.
 class ASTDecl : public AST
+{
+};
+
+// Base of any statement node.
+class ASTStmt : public AST
 {
 };
 
@@ -82,20 +89,33 @@ private:
     std::shared_ptr<ASTNumber> array_size; //< may be null
 };
 
+/// Node that represents a variable declaration in a function param list.
+class ASTParmVarDecl : public ASTVarDecl
+{
+    // TODO
+};
+
 /// Node that represents a function declaration.
 class ASTFunDecl : public ASTDecl
 {
 public:
-    // THIS IS A STUB FOR TESTING!!!!!
-    explicit ASTFunDecl(std::vector<std::shared_ptr<ASTExpr>> test) :
-        test(std::move(test))
+    explicit ASTFunDecl(bool is_void_retn, SourceRange name,
+                        std::vector<std::shared_ptr<ASTParmVarDecl>> params,
+                        std::shared_ptr<ASTCompoundStmt> comp_stmt) :
+        comp_stmt(std::move(comp_stmt)),
+        params(std::move(params)),
+        name(name),
+        is_void_retn(is_void_retn)
     {
     }
 
     virtual void dump(std::string&, size_t depth);
 
 private:
-    std::vector<std::shared_ptr<ASTExpr>> test;
+    std::shared_ptr<ASTCompoundStmt> comp_stmt; //< never null
+    std::vector<std::shared_ptr<ASTParmVarDecl>> params;
+    SourceRange name;
+    bool is_void_retn;
 };
 
 /// Node of a number.
@@ -192,4 +212,19 @@ class ASTFunCall : public ASTExpr
 public:
     virtual void dump(std::string&, size_t depth);
 };
+
+class ASTCompoundStmt : public ASTStmt
+{
+public:
+    // TODO this is a stub
+    explicit ASTCompoundStmt(std::vector<std::shared_ptr<ASTExpr>> test) :
+        test(std::move(test))
+    {}
+    
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    std::vector<std::shared_ptr<ASTExpr>> test;
+};
+
 }

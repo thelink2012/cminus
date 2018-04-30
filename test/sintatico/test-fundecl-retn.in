@@ -1,0 +1,10 @@
+void foo(void)
+{
+}
+
+int bar(void)
+{
+    /* TODO return */
+}
+
+void main(void) {}

@@ -1,0 +1,5 @@
+(void)
+{
+}
+
+void main(void) {}

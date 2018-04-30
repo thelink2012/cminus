@@ -43,10 +43,16 @@ public:
     void act_on_decl(const std::shared_ptr<ASTProgram>& program,
                      std::shared_ptr<ASTDecl> decl);
 
-    /// Acts on a declaration of a new variable.
+    /// Acts on the declaration of a new variable.
     auto act_on_var_decl(const Word& type, const Word& name,
                          std::shared_ptr<ASTNumber> array_size)
             -> std::shared_ptr<ASTVarDecl>;
+
+    /// Acts on the declaration of a new function.
+    auto act_on_fun_decl(const Word& retn_type, const Word& name,
+                         std::vector<std::shared_ptr<ASTParmVarDecl>> params,
+                         std::shared_ptr<ASTCompoundStmt> comp_stmt)
+            -> std::shared_ptr<ASTFunDecl>;
 
     /// Acts on an assignment expression.
     auto act_on_assign(std::shared_ptr<ASTVarRef> lhs,

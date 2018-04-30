@@ -85,22 +85,97 @@ auto Parser::parse_var_declaration() -> std::shared_ptr<ASTVarDecl>
 }
 
 // <fun-declaration> ::= <type-specifier> ID ( <params> ) <compound-stmt>
+// <params> ::= <param-list> | void
+// <param-list> ::= <param-list> , <param> | <param>
 auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
 {
+    auto retn = try_consume(Category::Void, Category::Int);
+    if(!retn)
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    auto id = try_consume(Category::Identifier);
+    if(!id)
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    if(!try_consume(Category::OpenParen))
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    // <params> ::= <param-list> | void
+    std::vector<std::shared_ptr<ASTParmVarDecl>> params;
+    if(lookahead(0).category == Category::Void &&
+       lookahead(1).category == Category::CloseParen)
+    {
+        // The params of the function is a single void, i.e. no params.
+        // Consume the `void` and go on.
+        consume();
+    }
+    else // <param-list> ::= <param-list> , <param> | <param>
+    {
+        if(auto param = parse_param())
+            params.push_back(param);
+        else
+            return nullptr;
+
+        while(peek_word.category != Category::CloseParen)
+        {
+            if(!try_consume(Category::Comma))
+            {
+                // TODO diag
+                return nullptr;
+            }
+
+            if(auto param = parse_param())
+                params.push_back(param);
+            else
+                return nullptr;
+        }
+    }
+
+    if(!try_consume(Category::CloseParen))
+    {
+        // TODO diag
+        return nullptr;
+    }
+
+    auto comp_stmt = parse_compound_stmt();
+    if(!comp_stmt)
+        return nullptr;
+
+    return sema.act_on_fun_decl(*retn, *id, std::move(params), std::move(comp_stmt));
+}
+
+// <param> ::= <type-specifier> ID | <type-specifier> ID [ ] 
+auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
+{
+    // TODO
+    return nullptr;
+}
+
+// <compound-stmt> ::= { <local-declarations> <statement-list> }
+auto Parser::parse_compound_stmt() -> std::shared_ptr<ASTCompoundStmt>
+{
     // TODO this is a stub
-    try_consume(Category::Void, Category::Int).value();
-    try_consume(Category::Identifier).value();
-    try_consume(Category::OpenParen).value();
-    try_consume(Category::Void).value();
-    try_consume(Category::CloseParen).value();
-    try_consume(Category::OpenCurly).value();
     std::vector<std::shared_ptr<ASTExpr>> test;
+    if(!try_consume(Category::OpenCurly))
+    {
+        // TODO diag
+        return nullptr;
+    }
     while(true)
     {
         if(peek_word.category == Category::CloseCurly)
         {
             consume();
-            return std::make_shared<ASTFunDecl>(std::move(test)); // stub ctor
+            return std::make_shared<ASTCompoundStmt>(std::move(test)); // stub ctor
         }
         else if(auto expr = parse_expression())
         {
@@ -362,6 +437,8 @@ var-declaration is not backtrack-free
 params is not backtrack-free
 
 param is not backtrack-free
+
+params is almost ambigous.
 
 args requires a follow set for backtrack-free parsing
 

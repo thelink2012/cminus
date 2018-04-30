@@ -1,0 +1,20 @@
+[program 
+  [decfunc 
+    [void]
+    [foo]
+    [paramlist 
+      [[int] [a]]
+      [[int] [b]]
+      [[int] [c]]
+    ]
+    [block 
+    ]
+  ]
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+    ]
+  ]
+]

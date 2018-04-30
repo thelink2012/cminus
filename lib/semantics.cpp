@@ -51,6 +51,24 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
     return new_decl;
 }
 
+auto Semantics::act_on_fun_decl(const Word& retn_type, const Word& name,
+                                std::vector<std::shared_ptr<ASTParmVarDecl>> params,
+                                std::shared_ptr<ASTCompoundStmt> comp_stmt)
+        -> std::shared_ptr<ASTFunDecl>
+{
+    assert(retn_type.category == Category::Void 
+            || retn_type.category == Category::Int);
+    assert(name.category == Category::Identifier);
+
+    auto is_void = (retn_type.category == Category::Void);
+
+    // TODO add decl to scope and all that cheese (semantics)
+
+    return std::make_shared<ASTFunDecl>(is_void, name.lexeme,
+                                        std::move(params),
+                                        std::move(comp_stmt));
+}
+
 auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                               std::shared_ptr<ASTExpr> rhs)
         -> std::shared_ptr<ASTAssignExpr>

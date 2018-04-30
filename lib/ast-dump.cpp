@@ -69,29 +69,44 @@ void ASTVarDecl::dump(std::string& dest, size_t depth)
 
 void ASTFunDecl::dump(std::string& dest, size_t depth)
 {
-    // STUB!!
     newline(dest, depth);
     dest += '[';
     dest += "decfunc";
     dest += ' ';
-    newline(dest, depth + 1);
-    dest += "[void]";
-    newline(dest, depth + 1);
-    dest += "[main]";
-    newline(dest, depth + 1);
-    dest += "[paramlist]";
-    newline(dest, depth + 1);
-    dest += "[block ";
-
-    for(auto& t : test)
-    {
-        t->dump(dest, depth + 2);
-        dest += ' ';
-    }
 
     newline(dest, depth + 1);
+    dest += (this->is_void_retn? "[void]" : "[int]");
+
+    newline(dest, depth + 1);
+    dest += '[';
+    dest += this->name;
     dest += ']';
 
+    newline(dest, depth + 1);
+    dest += '[';
+    dest += "paramlist";
+    for(auto& param : this->params)
+    {
+        dest += ' ';
+        param->dump(dest, depth + 2);
+    }
+    dest += ']';
+
+    this->comp_stmt->dump(dest, depth + 1);
+
+    newline(dest, depth);
+    dest += ']';
+}
+
+void ASTCompoundStmt::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += "[block ";
+    for(auto& t : test)
+    {
+        t->dump(dest, depth + 1);
+        dest += ' ';
+    }
     newline(dest, depth);
     dest += ']';
 }
