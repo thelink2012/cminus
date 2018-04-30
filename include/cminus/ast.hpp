@@ -79,7 +79,9 @@ class ASTVarDecl : public ASTDecl
 public:
     explicit ASTVarDecl(SourceRange name,
                         std::shared_ptr<ASTNumber> array_size) :
-        ASTVarDecl(name, !!array_size, std::move(array_size))
+        ASTVarDecl(name, !!array_size, array_size)
+                                    /* don't move array_size because of
+                                     * its use in !!array_size */
     {
     }
 

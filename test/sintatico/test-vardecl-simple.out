@@ -1,5 +1,5 @@
 [program 
-  [decvar var1]
+  [decvar [var1]]
   [decfunc 
     [void]
     [main]

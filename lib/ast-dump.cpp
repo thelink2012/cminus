@@ -58,7 +58,9 @@ void ASTVarDecl::dump(std::string& dest, size_t depth)
     dest += '[';
     dest += "decvar";
     dest += ' ';
+    dest += '[';
     dest += this->name;
+    dest += ']';
     if(this->is_array)
     {
         assert(this->array_size != nullptr);
