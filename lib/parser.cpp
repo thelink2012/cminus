@@ -42,22 +42,15 @@ auto Parser::parse_declaration() -> std::shared_ptr<ASTDecl>
 }
 
 // <var-declaration> ::= <type-specifier> ID ; | <type-specifier> ID [ NUM ] ;
-// <type-specifier> ::= int | void
 auto Parser::parse_var_declaration() -> std::shared_ptr<ASTVarDecl>
 {
-    auto type = try_consume(Category::Void, Category::Int);
+    auto type = expect_and_consume_type();
     if(!type)
-    {
-        // TODO diag
         return nullptr;
-    }
 
-    auto id = try_consume(Category::Identifier);
+    auto id = expect_and_consume(Category::Identifier);
     if(!id)
-    {
-        // TODO diag
         return nullptr;
-    }
 
     std::shared_ptr<ASTNumber> num;
     if(peek_word.category == Category::OpenBracket)
@@ -68,20 +61,29 @@ auto Parser::parse_var_declaration() -> std::shared_ptr<ASTVarDecl>
         if(!num)
             return nullptr;
 
-        if(!try_consume(Category::CloseBracket))
-        {
-            // TODO diag
+        if(!expect_and_consume(Category::CloseBracket))
             return nullptr;
-        }
     }
 
-    if(!try_consume(Category::Semicolon))
-    {
-        // TODO diag
+    if(!expect_and_consume(Category::Semicolon))
         return nullptr;
-    }
 
     return sema.act_on_var_decl(*type, *id, std::move(num));
+}
+
+// <type-specifier> ::= int | void
+auto Parser::expect_and_consume_type() -> std::optional<Word>
+{
+    if(auto type = try_consume(Category::Void, Category::Int))
+    {
+        return type;
+    }
+    else
+    {
+        diagman.report(scanner.get_source(), peek_word.location(),
+                       Diag::parser_expected_type);
+        return std::nullopt;
+    }
 }
 
 // <fun-declaration> ::= <type-specifier> ID ( <params> ) <compound-stmt>
@@ -89,25 +91,16 @@ auto Parser::parse_var_declaration() -> std::shared_ptr<ASTVarDecl>
 // <param-list> ::= <param-list> , <param> | <param>
 auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
 {
-    auto retn = try_consume(Category::Void, Category::Int);
+    auto retn = expect_and_consume_type();
     if(!retn)
-    {
-        // TODO diag
         return nullptr;
-    }
 
-    auto id = try_consume(Category::Identifier);
+    auto id = expect_and_consume(Category::Identifier);
     if(!id)
-    {
-        // TODO diag
         return nullptr;
-    }
 
-    if(!try_consume(Category::OpenParen))
-    {
-        // TODO diag
+    if(!expect_and_consume(Category::OpenParen))
         return nullptr;
-    }
 
     std::shared_ptr<ASTCompoundStmt> comp_stmt;
     std::vector<std::shared_ptr<ASTParmVarDecl>> params;
@@ -133,11 +126,8 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
 
             while(peek_word.category != Category::CloseParen)
             {
-                if(!try_consume(Category::Comma))
-                {
-                    // TODO diag
+                if(!expect_and_consume(Category::Comma))
                     return nullptr;
-                }
 
                 if(auto param = parse_param())
                     params.push_back(param);
@@ -146,11 +136,8 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
             }
         }
 
-        if(!try_consume(Category::CloseParen))
-        {
-            // TODO diag
+        if(!expect_and_consume(Category::CloseParen))
             return nullptr;
-        }
 
         comp_stmt = parse_compound_stmt(ScopeFlags::CompoundStmt
                                         | ScopeFlags::FunScope);
@@ -164,29 +151,20 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
 // <param> ::= <type-specifier> ID | <type-specifier> ID [ ] 
 auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 {
-    auto type = try_consume(Category::Void, Category::Int);
+    auto type = expect_and_consume_type();
     if(!type)
-    {
-        // TODO diag
         return nullptr;
-    }
 
-    auto id = try_consume(Category::Identifier);
+    auto id = expect_and_consume(Category::Identifier);
     if(!id)
-    {
-        // TODO diag
         return nullptr;
-    }
 
     bool is_array = false;
     if(try_consume(Category::OpenBracket))
     {
         is_array = true;
-        if(!try_consume(Category::CloseBracket))
-        {
-            // TODO diag
+        if(!expect_and_consume(Category::CloseBracket))
             return nullptr;
-        }
     }
 
     return sema.act_on_param_decl(*type, *id, is_array);
@@ -198,11 +176,8 @@ auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 auto Parser::parse_compound_stmt(ScopeFlags scope_flags)
     -> std::shared_ptr<ASTCompoundStmt>
 {
-    if(!try_consume(Category::OpenCurly))
-    {
-        // TODO diag
+    if(!expect_and_consume(Category::OpenCurly))
         return nullptr;
-    }
 
     // Enter a new scope context for this compound statement.
     ParseScope scope(sema, scope_flags);
@@ -245,7 +220,8 @@ auto Parser::parse_compound_stmt(ScopeFlags scope_flags)
 
     // The only way we can "stop" parsing a compound statement is by
     // reaching in the closing curly.
-    try_consume(Category::CloseCurly).value();
+    assert(peek_word.category == Category::CloseCurly);
+    consume();
 
     return sema.act_on_compound_stmt(std::move(decls), std::move(stms));
 }
@@ -257,9 +233,8 @@ auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
     // TODO this is a stub
     if(auto expr = parse_expression())
     {
-        if(!try_consume(Category::Semicolon))
+        if(!expect_and_consume(Category::Semicolon))
         {
-            // TODO diag but this is a stub
             return nullptr;
         }
         return expr;
@@ -312,18 +287,11 @@ auto Parser::parse_simple_expression() -> std::shared_ptr<ASTExpr>
                                       Category::Equal, Category::NotEqual))
         {
             if(auto expr2 = parse_additive_expression())
-            {
                 return sema.act_on_binary_expr(expr1, expr2, op_word->category);
-            }
             else
-            {
                 return nullptr;
-            }
         }
-        else
-        {
-            return expr1;
-        }
+        return expr1;
     }
     return nullptr;
 }
@@ -334,19 +302,14 @@ auto Parser::parse_additive_expression() -> std::shared_ptr<ASTExpr>
 {
     // This production has an simple left recursion. Though we may easily
     // use tail recursive parsing to derive it.
-    auto expr1 = parse_term();
-    if(expr1)
+    if(auto expr1 = parse_term())
     {
         while(auto op_word = try_consume(Category::Plus, Category::Minus))
         {
             if(auto expr2 = parse_term())
-            {
                 expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
-            }
             else
-            {
                 return nullptr;
-            }
         }
         return expr1;
     }
@@ -357,19 +320,14 @@ auto Parser::parse_additive_expression() -> std::shared_ptr<ASTExpr>
 auto Parser::parse_term() -> std::shared_ptr<ASTExpr>
 {
     // This is a soft copy of <additive-expression>. Check that out for details.
-    auto expr1 = parse_factor();
-    if(expr1)
+    if(auto expr1 = parse_factor())
     {
         while(auto op_word = try_consume(Category::Multiply, Category::Divide))
         {
             if(auto expr2 = parse_factor())
-            {
                 expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
-            }
             else
-            {
                 return nullptr;
-            }
         }
         return expr1;
     }
@@ -388,18 +346,14 @@ auto Parser::parse_factor() -> std::shared_ptr<ASTExpr>
         // ( <expression> )
         case Category::OpenParen:
         {
-            try_consume(Category::OpenParen).value();
+            consume();
 
             auto expr1 = parse_expression();
             if(!expr1)
                 return nullptr;
 
-            if(!try_consume(Category::CloseParen))
-            {
-                diagman.report(scanner.get_source(), peek_word.location(),
-                               Diag::parser_expected_token, Category::CloseParen);
+            if(!expect_and_consume(Category::CloseParen))
                 return nullptr;
-            }
 
             return expr1;
         }
@@ -431,27 +385,18 @@ auto Parser::parse_factor() -> std::shared_ptr<ASTExpr>
 // NUM
 auto Parser::parse_number() -> std::shared_ptr<ASTNumber>
 {
-    if(auto word = try_consume(Category::Number))
-    {
+    if(auto word = expect_and_consume(Category::Number))
         return sema.act_on_number(*word);
-    }
     else
-    {
-        diagman.report(scanner.get_source(), peek_word.location(),
-                       Diag::parser_expected_token, Category::Number);
         return nullptr;
-    }
 }
 
 // <var> ::= ID | ID [ <expression> ]
 auto Parser::parse_var() -> std::shared_ptr<ASTVarRef>
 {
-    auto id = try_consume(Category::Identifier);
+    auto id = expect_and_consume(Category::Identifier);
     if(!id)
-    {
-        // TODO call diagman with an error
         return nullptr;
-    }
 
     std::shared_ptr<ASTExpr> expr1;
     if(peek_word.category == Category::OpenBracket)
@@ -460,15 +405,10 @@ auto Parser::parse_var() -> std::shared_ptr<ASTVarRef>
 
         expr1 = parse_expression();
         if(!expr1)
-        {
             return nullptr;
-        }
 
-        if(!try_consume(Category::CloseBracket))
-        {
-            // TODO call diagman with an error
+        if(!expect_and_consume(Category::CloseBracket))
             return nullptr;
-        }
     }
 
     // TODO use sema to build node

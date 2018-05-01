@@ -20,6 +20,7 @@ enum class Diag
     lexer_unclosed_comment,
 
     parser_expected_token, // %0 => Category
+    parser_expected_type,
     parser_expected_expression,
     parser_number_too_big,
 };

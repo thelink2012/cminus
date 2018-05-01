@@ -72,7 +72,7 @@ private:
 
     /// Tries to consume the next word from the stream.
     ///
-    /// \returns The word if the category matches with any in `args...`,
+    /// \returns the word if the category matches with any in `args...`,
     ///          otherwise `std::nullopt`.
     template<typename... Args>
     auto try_consume(Args&&... args) -> std::optional<Word>
@@ -83,6 +83,23 @@ private:
         else
             return std::nullopt;
     }
+
+    /// Tries to consume the next word from the stream. If that is not
+    /// possible an error diagnostic is produced.
+    ///
+    /// \returns the word if the category matches `category`.
+    auto expect_and_consume(Category category) -> std::optional<Word>
+    {
+        if(peek_word.category != category)
+        {
+            diagman.report(scanner.get_source(), peek_word.location(),
+                           Diag::parser_expected_token, category);
+            return std::nullopt;
+        }
+        return consume();
+    }
+
+    auto expect_and_consume_type() -> std::optional<Word>;
 
 private:
     Scanner& scanner;
