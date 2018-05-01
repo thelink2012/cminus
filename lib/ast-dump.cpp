@@ -94,7 +94,7 @@ void ASTFunDecl::dump(std::string& dest, size_t depth)
     dest += ' ';
 
     newline(dest, depth + 1);
-    dest += (this->is_void_retn? "[void]" : "[int]");
+    dest += (this->is_void_retn ? "[void]" : "[int]");
 
     newline(dest, depth + 1);
     dest += '[';
@@ -124,7 +124,7 @@ void ASTCompoundStmt::dump(std::string& dest, size_t depth)
 
     for(auto& decl : decls)
         decl->dump(dest, depth + 1);
-    
+
     for(auto& stmt : stms)
         stmt->dump(dest, depth + 1);
 

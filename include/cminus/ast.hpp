@@ -52,7 +52,6 @@ class ASTExpr : public ASTStmt
 {
 };
 
-
 /// Node that represents an entire program.
 class ASTProgram : public AST
 {
@@ -81,14 +80,15 @@ public:
     explicit ASTVarDecl(SourceRange name,
                         std::shared_ptr<ASTNumber> array_size) :
         ASTVarDecl(name, !!array_size, array_size)
-                                    /* don't move array_size because of
+    /* don't move array_size because of
                                      * its use in !!array_size */
     {
     }
 
     explicit ASTVarDecl(SourceRange name, bool is_array,
                         std::shared_ptr<ASTNumber> array_size) :
-        name(name), array_size(std::move(array_size)), is_array(is_array)
+        name(name),
+        array_size(std::move(array_size)), is_array(is_array)
     {
     }
 
@@ -106,7 +106,8 @@ class ASTParmVarDecl : public ASTVarDecl
 public:
     explicit ASTParmVarDecl(SourceRange name, bool is_array) :
         ASTVarDecl(name, is_array, nullptr)
-    {}
+    {
+    }
 
     virtual void dump(std::string&, size_t depth);
 };
@@ -221,7 +222,6 @@ public:
     }
 };
 
-
 /// Node of a function call in the AST.
 class ASTFunCall : public ASTExpr
 {
@@ -234,14 +234,15 @@ class ASTCompoundStmt : public ASTStmt
 public:
     explicit ASTCompoundStmt(std::vector<std::shared_ptr<ASTVarDecl>> decls,
                              std::vector<std::shared_ptr<ASTStmt>> stms) :
-        decls(std::move(decls)), stms(std::move(stms))
-    {}
-    
+        decls(std::move(decls)),
+        stms(std::move(stms))
+    {
+    }
+
     virtual void dump(std::string&, size_t depth);
 
 private:
     std::vector<std::shared_ptr<ASTVarDecl>> decls;
     std::vector<std::shared_ptr<ASTStmt>> stms;
 };
-
 }

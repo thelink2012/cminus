@@ -6,7 +6,6 @@
 
 namespace cminus
 {
-
 enum class ScopeFlags : uint32_t
 {
     /// This is the top-level program scope.
@@ -16,7 +15,7 @@ enum class ScopeFlags : uint32_t
     /// This scope is right before the compound statement scope of a function.
     FunParamsScope = (1 << 1),
 
-    /// This is the scope of the compound statement following the 
+    /// This is the scope of the compound statement following the
     /// function declaration. Implies `ScopeFlags::CompoundStmt`.
     FunScope = (1 << 2),
 
@@ -27,17 +26,13 @@ enum class ScopeFlags : uint32_t
 constexpr ScopeFlags operator|(ScopeFlags lhs, ScopeFlags rhs)
 {
     return static_cast<ScopeFlags>(
-        static_cast<uint32_t>(lhs) | 
-        static_cast<uint32_t>(rhs)
-    );
+            static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
 }
 
 constexpr ScopeFlags operator&(ScopeFlags lhs, ScopeFlags rhs)
 {
     return static_cast<ScopeFlags>(
-        static_cast<uint32_t>(lhs) &
-        static_cast<uint32_t>(rhs)
-    );
+            static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
 }
 
 constexpr bool operator!(ScopeFlags value)
@@ -51,9 +46,11 @@ public:
     explicit Scope(ScopeFlags flags, std::unique_ptr<Scope> parent_a) :
         parent_scope(std::move(parent_a)), flags(flags)
     {
-        assert(!!(flags & ScopeFlags::FunScope)?
-                !!(flags & ScopeFlags::CompoundStmt) : true);
+        assert(!!(flags & ScopeFlags::FunScope) ? !!(flags & ScopeFlags::CompoundStmt) : true);
     }
+
+    Scope(const Scope&) = delete;
+    Scope& operator=(const Scope&) = delete;
 
     auto detach() -> std::unique_ptr<Scope>
     {
@@ -102,6 +99,9 @@ public:
     explicit Semantics(const SourceFile& source,
                        DiagnosticManager& diagman);
 
+    Semantics(const Semantics&) = delete;
+    Semantics& operator=(const Semantics&) = delete;
+
     /// Acts once the parser begins parsing.
     auto act_on_program_start() -> std::shared_ptr<ASTProgram>;
 
@@ -147,6 +147,10 @@ public:
     /// Acts on a number.
     auto act_on_number(const Word& word)
             -> std::shared_ptr<ASTNumber>;
+
+    /// Acts on reference to a variable.
+    auto act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
+            -> std::shared_ptr<ASTVarRef>;
 
     /// Converts a word into a number.
     int32_t number_from_word(const Word& word);
@@ -203,5 +207,4 @@ private:
     Scope* handle;
     Semantics& sema;
 };
-
 }

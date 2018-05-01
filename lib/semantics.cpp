@@ -53,7 +53,7 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
     {
         // TODO even the Diag:: code is wrong!!! TRASH ME OUT REALLY.
         diagman.report(source, type.location(), Diag::parser_number_too_big)
-            .range(type.lexeme);
+                .range(type.lexeme);
     }
 
     // Return the new declaration no matter what.
@@ -65,8 +65,8 @@ auto Semantics::act_on_fun_decl(const Word& retn_type, const Word& name,
                                 std::shared_ptr<ASTCompoundStmt> comp_stmt)
         -> std::shared_ptr<ASTFunDecl>
 {
-    assert(retn_type.category == Category::Void 
-            || retn_type.category == Category::Int);
+    assert(retn_type.category == Category::Void
+           || retn_type.category == Category::Int);
     assert(name.category == Category::Identifier);
 
     auto is_void = (retn_type.category == Category::Void);
@@ -78,7 +78,7 @@ auto Semantics::act_on_fun_decl(const Word& retn_type, const Word& name,
                                         std::move(comp_stmt));
 }
 
-auto Semantics::act_on_param_decl(const Word& type, const Word& name, 
+auto Semantics::act_on_param_decl(const Word& type, const Word& name,
                                   bool is_array)
         -> std::shared_ptr<ASTParmVarDecl>
 {
@@ -87,13 +87,13 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
 
     // TODO cannot be void and stuff
     // TODO add to scope and stuff
-    
+
     // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
     if(type.category == Category::Void)
     {
         // TODO even the Diag:: code is wrong!!! TRASH ME OUT REALLY.
         diagman.report(source, type.location(), Diag::parser_number_too_big)
-            .range(type.lexeme);
+                .range(type.lexeme);
     }
 
     return std::make_shared<ASTParmVarDecl>(name.lexeme, is_array);
@@ -125,8 +125,16 @@ auto Semantics::act_on_compound_stmt(std::vector<std::shared_ptr<ASTVarDecl>> de
 auto Semantics::act_on_number(const Word& word)
         -> std::shared_ptr<ASTNumber>
 {
+    assert(word.category == Category::Number);
     auto number = number_from_word(word);
     return std::make_shared<ASTNumber>(number);
+}
+
+auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
+        -> std::shared_ptr<ASTVarRef>
+{
+    assert(name.category == Category::Identifier);
+    return std::make_shared<ASTVarRef>(name.lexeme, std::move(index));
 }
 
 auto Semantics::number_from_word(const Word& word) -> int32_t

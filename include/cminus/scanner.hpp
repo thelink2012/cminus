@@ -87,6 +87,9 @@ public:
         this->current_pos = source.view_with_terminator().begin();
     }
 
+    Scanner(const Scanner&) = delete;
+    Scanner& operator=(const Scanner&) = delete;
+
     /// Gets the next word in the stream of characters.
     ///
     /// The scanner handles bad words to the best of its abilities,

@@ -110,8 +110,7 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
         ParseScope scope(sema, ScopeFlags::FunParamsScope);
 
         // <params> ::= <param-list> | void
-        if(lookahead(0).category == Category::Void &&
-           lookahead(1).category == Category::CloseParen)
+        if(lookahead(0).category == Category::Void && lookahead(1).category == Category::CloseParen)
         {
             // The params of the function is a single void, i.e. no params.
             // Consume the `void` and go on.
@@ -148,7 +147,7 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
     return sema.act_on_fun_decl(*retn, *id, std::move(params), std::move(comp_stmt));
 }
 
-// <param> ::= <type-specifier> ID | <type-specifier> ID [ ] 
+// <param> ::= <type-specifier> ID | <type-specifier> ID [ ]
 auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 {
     auto type = expect_and_consume_type();
@@ -174,7 +173,7 @@ auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 // <local-declarations> ::= <local-declarations> <var-declaration> | empty
 // <statement-list> ::= <statement-list> <statement> | empty
 auto Parser::parse_compound_stmt(ScopeFlags scope_flags)
-    -> std::shared_ptr<ASTCompoundStmt>
+        -> std::shared_ptr<ASTCompoundStmt>
 {
     if(!expect_and_consume(Category::OpenCurly))
         return nullptr;
@@ -226,7 +225,7 @@ auto Parser::parse_compound_stmt(ScopeFlags scope_flags)
     return sema.act_on_compound_stmt(std::move(decls), std::move(stms));
 }
 
-// <statement> ::= <expression-stmt> | <compound-stmt> | <selection-stmt> 
+// <statement> ::= <expression-stmt> | <compound-stmt> | <selection-stmt>
 //              | <iteration-stmt> | <return-stmt>
 auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
 {
@@ -398,27 +397,26 @@ auto Parser::parse_var() -> std::shared_ptr<ASTVarRef>
     if(!id)
         return nullptr;
 
-    std::shared_ptr<ASTExpr> expr1;
+    std::shared_ptr<ASTExpr> index;
     if(peek_word.category == Category::OpenBracket)
     {
         consume();
 
-        expr1 = parse_expression();
-        if(!expr1)
+        index = parse_expression();
+        if(!index)
             return nullptr;
 
         if(!expect_and_consume(Category::CloseBracket))
             return nullptr;
     }
 
-    // TODO use sema to build node
-    return std::make_shared<ASTVarRef>(id->lexeme, expr1);
+    return sema.act_on_var(*id, std::move(index));
 }
 
 // <call> ::= ID ( <args> )
 auto Parser::parse_call() -> std::shared_ptr<ASTFunCall>
 {
-    // TODO once we have function decls
+    // TODO
     return nullptr;
 }
 }

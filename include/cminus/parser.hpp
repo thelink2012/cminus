@@ -26,6 +26,9 @@ public:
             lw = scanner.next_word();
     }
 
+    Parser(const Parser&) = delete;
+    Parser& operator=(const Parser&) = delete;
+
     auto parse_program() -> std::shared_ptr<ASTProgram>;
 
 private:
@@ -45,7 +48,6 @@ private:
     auto parse_number() -> std::shared_ptr<ASTNumber>;
     auto parse_var() -> std::shared_ptr<ASTVarRef>;
     auto parse_call() -> std::shared_ptr<ASTFunCall>;
-
 
     /// Looks ahead in the stream by N words.
     ///

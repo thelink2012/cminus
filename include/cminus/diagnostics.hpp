@@ -93,6 +93,9 @@ class DiagnosticManager
 public:
     explicit DiagnosticManager();
 
+    DiagnosticManager(const DiagnosticManager&) = delete;
+    DiagnosticManager& operator=(const DiagnosticManager&) = delete;
+
     /// Reports a compiler diagnostic.
     template<typename... Args>
     auto report(const SourceFile& source, SourceLocation loc,
