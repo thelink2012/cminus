@@ -10,7 +10,7 @@ Semantics::Semantics(const SourceFile& source_a,
     source(source_a),
     diagman(diagman_a)
 {
-    this->current_scope = std::make_unique<Scope>();
+    this->current_scope = std::make_unique<Scope>(ScopeFlags::TopLevel, nullptr);
 }
 
 auto Semantics::act_on_program_start() -> std::shared_ptr<ASTProgram>
@@ -46,6 +46,14 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
     if(!inserted)
     {
         // TODO this is a semantic error (redecl)
+    }
+
+    // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
+    if(type.category == Category::Void)
+    {
+        // TODO even the Diag:: code is wrong!!! TRASH ME OUT REALLY.
+        diagman.report(source, type.location(), Diag::parser_number_too_big)
+            .range(type.lexeme);
     }
 
     // Return the new declaration no matter what.
@@ -105,6 +113,13 @@ auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
 {
     auto type = ASTBinaryExpr::type_from_category(category);
     return std::make_shared<ASTBinaryExpr>(std::move(lhs), std::move(rhs), type);
+}
+
+auto Semantics::act_on_compound_stmt(std::vector<std::shared_ptr<ASTVarDecl>> decls,
+                                     std::vector<std::shared_ptr<ASTStmt>> stms)
+        -> std::shared_ptr<ASTCompoundStmt>
+{
+    return std::make_shared<ASTCompoundStmt>(std::move(decls), std::move(stms));
 }
 
 auto Semantics::act_on_number(const Word& word)

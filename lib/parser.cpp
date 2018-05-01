@@ -109,46 +109,54 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
         return nullptr;
     }
 
-    // <params> ::= <param-list> | void
+    std::shared_ptr<ASTCompoundStmt> comp_stmt;
     std::vector<std::shared_ptr<ASTParmVarDecl>> params;
-    if(lookahead(0).category == Category::Void &&
-       lookahead(1).category == Category::CloseParen)
     {
-        // The params of the function is a single void, i.e. no params.
-        // Consume the `void` and go on.
-        consume();
-    }
-    else // <param-list> ::= <param-list> , <param> | <param>
-    {
-        if(auto param = parse_param())
-            params.push_back(param);
-        else
-            return nullptr;
+        // Enter a new scope context for the parameters.
+        // Keep it active while parsing the function body as well.
+        ParseScope scope(sema, ScopeFlags::FunParamsScope);
 
-        while(peek_word.category != Category::CloseParen)
+        // <params> ::= <param-list> | void
+        if(lookahead(0).category == Category::Void &&
+           lookahead(1).category == Category::CloseParen)
         {
-            if(!try_consume(Category::Comma))
-            {
-                // TODO diag
-                return nullptr;
-            }
-
+            // The params of the function is a single void, i.e. no params.
+            // Consume the `void` and go on.
+            consume();
+        }
+        else // <param-list> ::= <param-list> , <param> | <param>
+        {
             if(auto param = parse_param())
                 params.push_back(param);
             else
                 return nullptr;
+
+            while(peek_word.category != Category::CloseParen)
+            {
+                if(!try_consume(Category::Comma))
+                {
+                    // TODO diag
+                    return nullptr;
+                }
+
+                if(auto param = parse_param())
+                    params.push_back(param);
+                else
+                    return nullptr;
+            }
         }
-    }
 
-    if(!try_consume(Category::CloseParen))
-    {
-        // TODO diag
-        return nullptr;
-    }
+        if(!try_consume(Category::CloseParen))
+        {
+            // TODO diag
+            return nullptr;
+        }
 
-    auto comp_stmt = parse_compound_stmt();
-    if(!comp_stmt)
-        return nullptr;
+        comp_stmt = parse_compound_stmt(ScopeFlags::CompoundStmt
+                                        | ScopeFlags::FunScope);
+        if(!comp_stmt)
+            return nullptr;
+    }
 
     return sema.act_on_fun_decl(*retn, *id, std::move(params), std::move(comp_stmt));
 }
@@ -185,33 +193,78 @@ auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 }
 
 // <compound-stmt> ::= { <local-declarations> <statement-list> }
-auto Parser::parse_compound_stmt() -> std::shared_ptr<ASTCompoundStmt>
+// <local-declarations> ::= <local-declarations> <var-declaration> | empty
+// <statement-list> ::= <statement-list> <statement> | empty
+auto Parser::parse_compound_stmt(ScopeFlags scope_flags)
+    -> std::shared_ptr<ASTCompoundStmt>
 {
-    // TODO this is a stub
-    std::vector<std::shared_ptr<ASTExpr>> test;
     if(!try_consume(Category::OpenCurly))
     {
         // TODO diag
         return nullptr;
     }
-    while(true)
+
+    // Enter a new scope context for this compound statement.
+    ParseScope scope(sema, scope_flags);
+    std::vector<std::shared_ptr<ASTVarDecl>> decls;
+    std::vector<std::shared_ptr<ASTStmt>> stms;
+
+    // The first and follow set for local-declaration are disjoint. Therefore
+    // we can parse local-declaration as long as we have a valid first symbol.
+    // That is, no need to check the follow set when the first symbol is invalid.
+    while(peek_word.category == Category::Void
+          || peek_word.category == Category::Int)
     {
-        if(peek_word.category == Category::CloseCurly)
+        if(auto decl = parse_var_declaration())
         {
-            consume();
-            return std::make_shared<ASTCompoundStmt>(std::move(test)); // stub ctor
-        }
-        else if(auto expr = parse_expression())
-        {
-            if(!try_consume(Category::Semicolon))
-                return nullptr;
-            test.push_back(std::move(expr));
+            decls.push_back(std::move(decl));
         }
         else
         {
+            // TODO oh hey there is probably a nice way to recover by
+            // skipping until after the next semicolon.
             return nullptr;
         }
     }
+
+    // The first set for statement-list does not contain a '}', but that is
+    // the only element from its follow set. That means we can parse as long
+    // as we don't find a closing curly bracket.
+    while(peek_word.category != Category::CloseCurly)
+    {
+        if(auto stmt = parse_statement())
+        {
+            stms.push_back(std::move(stmt));
+        }
+        else
+        {
+            // TODO we can recover nicely here as well.
+            return nullptr;
+        }
+    }
+
+    // The only way we can "stop" parsing a compound statement is by
+    // reaching in the closing curly.
+    try_consume(Category::CloseCurly).value();
+
+    return sema.act_on_compound_stmt(std::move(decls), std::move(stms));
+}
+
+// <statement> ::= <expression-stmt> | <compound-stmt> | <selection-stmt> 
+//              | <iteration-stmt> | <return-stmt>
+auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
+{
+    // TODO this is a stub
+    if(auto expr = parse_expression())
+    {
+        if(!try_consume(Category::Semicolon))
+        {
+            // TODO diag but this is a stub
+            return nullptr;
+        }
+        return expr;
+    }
+    return nullptr;
 }
 
 // <expression> ::= <var> = <expression> | <simple-expression>

@@ -1,0 +1,34 @@
+[program 
+  [decfunc 
+    [void]
+    [f0]
+    [paramlist]
+    [block 
+      [decvar [x]]
+    ]
+  ]
+  [decfunc 
+    [void]
+    [f1]
+    [paramlist]
+    [block 
+      [decvar [x]]
+      [decvar [y]]
+      [decvar [z] [10]]
+    ]
+  ]
+  [decfunc 
+    [void]
+    [f2]
+    [paramlist]
+    [block 
+    ]
+  ]
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+    ]
+  ]
+]

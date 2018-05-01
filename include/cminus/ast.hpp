@@ -37,11 +37,6 @@ public:
     }
 };
 
-/// Base of any expression node.
-class ASTExpr : public AST
-{
-};
-
 /// Base of any declaration node.
 class ASTDecl : public AST
 {
@@ -51,6 +46,12 @@ class ASTDecl : public AST
 class ASTStmt : public AST
 {
 };
+
+/// Base of any expression node.
+class ASTExpr : public ASTStmt
+{
+};
+
 
 /// Node that represents an entire program.
 class ASTProgram : public AST
@@ -231,15 +232,16 @@ public:
 class ASTCompoundStmt : public ASTStmt
 {
 public:
-    // TODO this is a stub
-    explicit ASTCompoundStmt(std::vector<std::shared_ptr<ASTExpr>> test) :
-        test(std::move(test))
+    explicit ASTCompoundStmt(std::vector<std::shared_ptr<ASTVarDecl>> decls,
+                             std::vector<std::shared_ptr<ASTStmt>> stms) :
+        decls(std::move(decls)), stms(std::move(stms))
     {}
     
     virtual void dump(std::string&, size_t depth);
 
 private:
-    std::vector<std::shared_ptr<ASTExpr>> test;
+    std::vector<std::shared_ptr<ASTVarDecl>> decls;
+    std::vector<std::shared_ptr<ASTStmt>> stms;
 };
 
 }

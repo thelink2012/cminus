@@ -1,0 +1,30 @@
+[program 
+  [decfunc 
+    [void]
+    [f0]
+    [paramlist]
+    [block 
+    ]
+  ]
+  [decfunc 
+    [void]
+    [f1]
+    [paramlist]
+    [block [1][2][3]
+    ]
+  ]
+  [decfunc 
+    [void]
+    [f2]
+    [paramlist]
+    [block [1]
+    ]
+  ]
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+    ]
+  ]
+]

@@ -121,11 +121,13 @@ void ASTCompoundStmt::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += "[block ";
-    for(auto& t : test)
-    {
-        t->dump(dest, depth + 1);
-        dest += ' ';
-    }
+
+    for(auto& decl : decls)
+        decl->dump(dest, depth + 1);
+    
+    for(auto& stmt : stms)
+        stmt->dump(dest, depth + 1);
+
     newline(dest, depth);
     dest += ']';
 }

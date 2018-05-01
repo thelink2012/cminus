@@ -32,6 +32,10 @@ private:
     auto parse_declaration() -> std::shared_ptr<ASTDecl>;
     auto parse_var_declaration() -> std::shared_ptr<ASTVarDecl>;
     auto parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>;
+    auto parse_param() -> std::shared_ptr<ASTParmVarDecl>;
+
+    auto parse_compound_stmt(ScopeFlags) -> std::shared_ptr<ASTCompoundStmt>;
+    auto parse_statement() -> std::shared_ptr<ASTStmt>;
 
     auto parse_expression() -> std::shared_ptr<ASTExpr>;
     auto parse_simple_expression() -> std::shared_ptr<ASTExpr>;
@@ -42,9 +46,6 @@ private:
     auto parse_var() -> std::shared_ptr<ASTVarRef>;
     auto parse_call() -> std::shared_ptr<ASTFunCall>;
 
-    // the following are stubs
-    auto parse_param() -> std::shared_ptr<ASTParmVarDecl>;
-    auto parse_compound_stmt() -> std::shared_ptr<ASTCompoundStmt>;
 
     /// Looks ahead in the stream by N words.
     ///
