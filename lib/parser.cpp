@@ -13,18 +13,13 @@ namespace cminus
 auto Parser::parse_program() -> std::shared_ptr<ASTProgram>
 {
     auto program = sema.act_on_program_start();
-    while(peek_word.category != Category::Eof)
+    do
     {
         if(auto decl = parse_declaration())
-        {
             sema.act_on_top_level_decl(program, std::move(decl));
-        }
         else
-        {
-            // TODO we can recover, how?
-            return nullptr;
-        }
-    }
+            return nullptr; // TODO how can we recover?
+    } while(peek_word.category != Category::Eof);
     return sema.act_on_program_end(program);
 }
 
