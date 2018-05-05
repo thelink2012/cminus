@@ -37,8 +37,12 @@ private:
     auto parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>;
     auto parse_param() -> std::shared_ptr<ASTParmVarDecl>;
 
-    auto parse_compound_stmt(ScopeFlags) -> std::shared_ptr<ASTCompoundStmt>;
     auto parse_statement() -> std::shared_ptr<ASTStmt>;
+    auto parse_expr_stmt() -> std::shared_ptr<ASTStmt>;
+    auto parse_compound_stmt(ScopeFlags) -> std::shared_ptr<ASTCompoundStmt>;
+    auto parse_selection_stmt() -> std::shared_ptr<ASTSelectionStmt>;
+    auto parse_iteration_stmt() -> std::shared_ptr<ASTIterationStmt>;
+    auto parse_return_stmt() -> std::shared_ptr<ASTReturnStmt>;
 
     auto parse_expression() -> std::shared_ptr<ASTExpr>;
     auto parse_simple_expression() -> std::shared_ptr<ASTExpr>;

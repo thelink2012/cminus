@@ -115,11 +115,51 @@ auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
     return std::make_shared<ASTBinaryExpr>(std::move(lhs), std::move(rhs), type);
 }
 
+auto Semantics::act_on_null_stmt()
+        -> std::shared_ptr<ASTNullStmt>
+{
+    return std::make_shared<ASTNullStmt>();
+}
+
 auto Semantics::act_on_compound_stmt(std::vector<std::shared_ptr<ASTVarDecl>> decls,
                                      std::vector<std::shared_ptr<ASTStmt>> stms)
         -> std::shared_ptr<ASTCompoundStmt>
 {
     return std::make_shared<ASTCompoundStmt>(std::move(decls), std::move(stms));
+}
+
+auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
+                                      std::shared_ptr<ASTStmt> stmt)
+        -> std::shared_ptr<ASTSelectionStmt>
+{
+    return std::make_shared<ASTSelectionStmt>(std::move(expr), std::move(stmt));
+}
+
+auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
+                                      std::shared_ptr<ASTStmt> stmt1,
+                                      std::shared_ptr<ASTStmt> stmt2)
+        -> std::shared_ptr<ASTSelectionStmt>
+{
+    return std::make_shared<ASTSelectionStmt>(std::move(expr), std::move(stmt1), std::move(stmt2));
+}
+
+auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
+                                      std::shared_ptr<ASTStmt> stmt)
+        -> std::shared_ptr<ASTIterationStmt>
+{
+    return std::make_shared<ASTIterationStmt>(std::move(expr), std::move(stmt));
+}
+
+auto Semantics::act_on_return_stmt()
+        -> std::shared_ptr<ASTReturnStmt>
+{
+    return std::make_shared<ASTReturnStmt>();
+}
+
+auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
+        -> std::shared_ptr<ASTReturnStmt>
+{
+    return std::make_shared<ASTReturnStmt>(std::move(expr));
 }
 
 auto Semantics::act_on_number(const Word& word)

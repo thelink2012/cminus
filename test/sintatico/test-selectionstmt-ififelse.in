@@ -1,0 +1,10 @@
+void main(void){
+	if(a==b)
+		return;
+	if(a>=b)
+		a = a+b;
+	else{
+		return;
+	}
+	return;
+}

@@ -1,0 +1,15 @@
+[program 
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [while 
+        [== [var a] 
+          [+ [var b] [1]]]
+        [null]
+      ]
+      [return ]
+    ]
+  ]
+]

@@ -4,8 +4,8 @@
     [main]
     [paramlist]
     [block 
-      [assign [x] 
-        [< [y] [2]]] 
+      [assign [var x] 
+        [< [var y] [2]]] 
     ]
   ]
 ]

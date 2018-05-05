@@ -1,0 +1,22 @@
+[program 
+  [decfunc 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [if 
+        [== [var a] [var b]]
+        [return ]
+      ]
+      [if 
+        [>= [var a] [var b]]
+        [assign [var a] 
+          [+ [var a] [var b]]]
+        [block 
+          [return ]
+        ]
+      ]
+      [return ]
+    ]
+  ]
+]

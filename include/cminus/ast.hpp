@@ -14,7 +14,11 @@ class ASTAssignExpr;
 class ASTNumber;
 class ASTVarRef;
 class ASTFunCall;
+class ASTNullStmt;
 class ASTCompoundStmt;
+class ASTSelectionStmt;
+class ASTIterationStmt;
+class ASTReturnStmt;
 
 /// Base of any AST node.
 class AST : public std::enable_shared_from_this<AST>
@@ -229,6 +233,16 @@ public:
     virtual void dump(std::string&, size_t depth);
 };
 
+class ASTNullStmt : public ASTStmt
+{
+public:
+    explicit ASTNullStmt()
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+};
+
 class ASTCompoundStmt : public ASTStmt
 {
 public:
@@ -244,5 +258,67 @@ public:
 private:
     std::vector<std::shared_ptr<ASTVarDecl>> decls;
     std::vector<std::shared_ptr<ASTStmt>> stms;
+};
+
+class ASTSelectionStmt : public ASTStmt
+{
+public:
+    explicit ASTSelectionStmt(std::shared_ptr<ASTExpr> expr,
+                              std::shared_ptr<ASTStmt> stmt) :
+        expr(std::move(expr)),
+        stmt1(std::move(stmt))
+    {
+    }
+
+    explicit ASTSelectionStmt(std::shared_ptr<ASTExpr> expr,
+                              std::shared_ptr<ASTStmt> stmt1,
+                              std::shared_ptr<ASTStmt> stmt2) :
+        expr(std::move(expr)),
+        stmt1(std::move(stmt1)),
+        stmt2(std::move(stmt2))
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    std::shared_ptr<ASTExpr> expr;
+    std::shared_ptr<ASTStmt> stmt1;
+    std::shared_ptr<ASTStmt> stmt2;
+};
+
+class ASTIterationStmt : public ASTStmt
+{
+public:
+    explicit ASTIterationStmt(std::shared_ptr<ASTExpr> expr,
+                              std::shared_ptr<ASTStmt> stmt) :
+        expr(std::move(expr)),
+        stmt(std::move(stmt))
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    std::shared_ptr<ASTExpr> expr;
+    std::shared_ptr<ASTStmt> stmt;
+};
+
+class ASTReturnStmt : public ASTStmt
+{
+public:
+    explicit ASTReturnStmt()
+    {
+    }
+
+    explicit ASTReturnStmt(std::shared_ptr<ASTExpr> expr) :
+        expr(std::move(expr))
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    std::shared_ptr<ASTExpr> expr;
 };
 }

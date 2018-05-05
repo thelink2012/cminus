@@ -128,10 +128,36 @@ public:
     auto act_on_param_decl(const Word& type, const Word& name, bool is_array)
             -> std::shared_ptr<ASTParmVarDecl>;
 
+    /// Acts on a null statement.
+    auto act_on_null_stmt() -> std::shared_ptr<ASTNullStmt>;
+
     /// Acts on a compound statement.
     auto act_on_compound_stmt(std::vector<std::shared_ptr<ASTVarDecl>> decls,
                               std::vector<std::shared_ptr<ASTStmt>> stms)
             -> std::shared_ptr<ASTCompoundStmt>;
+
+    /// Acts on a selection statement.
+    auto act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
+                               std::shared_ptr<ASTStmt> stmt)
+            -> std::shared_ptr<ASTSelectionStmt>;
+
+    /// Acts on a selection statement.
+    auto act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
+                               std::shared_ptr<ASTStmt> stmt1,
+                               std::shared_ptr<ASTStmt> stmt2)
+            -> std::shared_ptr<ASTSelectionStmt>;
+
+    /// Acts on an iteration statement.
+    auto act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
+                               std::shared_ptr<ASTStmt> stmt)
+            -> std::shared_ptr<ASTIterationStmt>;
+
+    /// Acts on a return statement.
+    auto act_on_return_stmt() -> std::shared_ptr<ASTReturnStmt>;
+
+    /// Acts on a return statement.
+    auto act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
+            -> std::shared_ptr<ASTReturnStmt>;
 
     /// Acts on an assignment expression.
     auto act_on_assign(std::shared_ptr<ASTVarRef> lhs,

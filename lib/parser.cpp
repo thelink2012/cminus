@@ -164,6 +164,46 @@ auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
     return sema.act_on_param_decl(*type, *id, is_array);
 }
 
+// <statement> ::= <expression-stmt> | <compound-stmt> | <selection-stmt>
+//              | <iteration-stmt> | <return-stmt>
+auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
+{
+    // Here we can just look at the category of the current word to decide wich parse is needed.
+    switch(peek_word.category){
+        case Category::Identifier:
+        case Category::Number:
+        case Category::OpenParen:
+        case Category::Semicolon:
+            return parse_expr_stmt();
+        case Category::OpenCurly:
+            return parse_compound_stmt(ScopeFlags::CompoundStmt);
+        case Category::If:
+            return parse_selection_stmt();
+        case Category::While:
+            return parse_iteration_stmt();
+        case Category::Return:
+            return parse_return_stmt();
+        default:
+            return nullptr;
+    }
+
+}
+
+// <expression-stmt> ::= <expression> ; | ;
+auto Parser::parse_expr_stmt() -> std::shared_ptr<ASTStmt>
+{
+    if(try_consume(Category::Semicolon))
+        return sema.act_on_null_stmt();
+
+    if(auto expr = parse_expression())
+    {
+        if(!expect_and_consume(Category::Semicolon))
+            return nullptr;
+        return expr;
+    }
+    return nullptr;
+}
+
 // <compound-stmt> ::= { <local-declarations> <statement-list> }
 // <local-declarations> ::= <local-declarations> <var-declaration> | empty
 // <statement-list> ::= <statement-list> <statement> | empty
@@ -220,18 +260,72 @@ auto Parser::parse_compound_stmt(ScopeFlags scope_flags)
     return sema.act_on_compound_stmt(std::move(decls), std::move(stms));
 }
 
-// <statement> ::= <expression-stmt> | <compound-stmt> | <selection-stmt>
-//              | <iteration-stmt> | <return-stmt>
-auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
+// <selection-stmt> ::= if ( <expression> ) <statement>
+//                  | if ( <expression> ) <statement> else <statement>
+auto Parser::parse_selection_stmt() -> std::shared_ptr<ASTSelectionStmt>
 {
-    // TODO this is a stub
+    if(!expect_and_consume(Category::If))
+        return nullptr;
+    if(!expect_and_consume(Category::OpenParen))
+        return nullptr;
+
+    // Once consumed "if (" we always need to consume some expression.
+    if(auto expr = parse_expression())
+    {
+        if(!expect_and_consume(Category::CloseParen))
+            return nullptr;
+
+        // Then we always need to cosnume a statement
+        if(auto stmt1 = parse_statement())
+        {
+            // Once consumed the if's statement is need to check if there's an "else"
+            // and if there's our job is parse it.
+            if(!try_consume(Category::Else))
+                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1));
+            
+            if(auto stmt2 = parse_statement())
+                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), std::move(stmt2));
+            return nullptr;
+        }
+        return nullptr;
+    }
+    return nullptr;
+}
+
+// <iteration-stmt> ::= while ( <expression> ) <statement>
+auto Parser::parse_iteration_stmt() -> std::shared_ptr<ASTIterationStmt>
+{
+    if(!expect_and_consume(Category::While))
+        return nullptr;
+    if(!expect_and_consume(Category::OpenParen))
+        return nullptr;
+
+    if(auto expr = parse_expression())
+    {
+        if(!expect_and_consume(Category::CloseParen))
+            return nullptr;
+
+        if(auto stmt = parse_statement())
+            return sema.act_on_iteration_stmt(std::move(expr), std::move(stmt));
+        return nullptr;
+    }
+    return nullptr;
+}
+
+// <return-stmt> ::= return ; | return <expression> ;
+auto Parser::parse_return_stmt() -> std::shared_ptr<ASTReturnStmt>
+{
+    if(!expect_and_consume(Category::Return))
+        return nullptr;
+
+    if(try_consume(Category::Semicolon))
+        return sema.act_on_return_stmt();
+
     if(auto expr = parse_expression())
     {
         if(!expect_and_consume(Category::Semicolon))
-        {
             return nullptr;
-        }
-        return expr;
+        return sema.act_on_return_stmt(std::move(expr));
     }
     return nullptr;
 }

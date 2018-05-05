@@ -117,10 +117,20 @@ void ASTFunDecl::dump(std::string& dest, size_t depth)
     dest += ']';
 }
 
+void ASTNullStmt::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += '[';
+    dest += "null";
+    dest += ']';
+}
+
 void ASTCompoundStmt::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
-    dest += "[block ";
+    dest += '[';
+    dest += "block";
+    dest += ' ';
 
     for(auto& decl : decls)
         decl->dump(dest, depth + 1);
@@ -129,6 +139,52 @@ void ASTCompoundStmt::dump(std::string& dest, size_t depth)
         stmt->dump(dest, depth + 1);
 
     newline(dest, depth);
+    dest += ']';
+}
+
+void ASTSelectionStmt::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += '[';
+    dest += "if";
+    dest += ' ';
+
+    expr->dump(dest, depth + 1);
+
+    stmt1->dump(dest, depth + 1);
+
+    if(stmt2)
+        stmt2->dump(dest, depth + 1);
+
+    newline(dest, depth);
+    dest += ']';
+}
+
+void ASTIterationStmt::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += '[';
+    dest += "while";
+    dest += ' ';
+
+    expr->dump(dest, depth + 1);
+
+    stmt->dump(dest, depth + 1);
+
+    newline(dest, depth);
+    dest += ']';
+}
+
+void ASTReturnStmt::dump(std::string& dest, size_t depth)
+{
+    newline(dest, depth);
+    dest += '[';
+    dest += "return";
+    dest += ' ';
+
+    if(expr)
+        expr->dump(dest, depth + 1);
+
     dest += ']';
 }
 
@@ -156,6 +212,8 @@ void ASTNumber::dump(std::string& dest, size_t depth)
 void ASTVarRef::dump(std::string& dest, size_t depth)
 {
     dest += '[';
+    dest += "var";
+    dest += ' ';
     dest += this->varname;
     if(this->expr)
     {
