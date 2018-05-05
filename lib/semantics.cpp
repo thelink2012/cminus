@@ -129,13 +129,6 @@ auto Semantics::act_on_compound_stmt(std::vector<std::shared_ptr<ASTVarDecl>> de
 }
 
 auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
-                                      std::shared_ptr<ASTStmt> stmt)
-        -> std::shared_ptr<ASTSelectionStmt>
-{
-    return std::make_shared<ASTSelectionStmt>(std::move(expr), std::move(stmt));
-}
-
-auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
                                       std::shared_ptr<ASTStmt> stmt1,
                                       std::shared_ptr<ASTStmt> stmt2)
         -> std::shared_ptr<ASTSelectionStmt>
@@ -148,12 +141,6 @@ auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
         -> std::shared_ptr<ASTIterationStmt>
 {
     return std::make_shared<ASTIterationStmt>(std::move(expr), std::move(stmt));
-}
-
-auto Semantics::act_on_return_stmt()
-        -> std::shared_ptr<ASTReturnStmt>
-{
-    return std::make_shared<ASTReturnStmt>();
 }
 
 auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)

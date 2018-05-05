@@ -5,7 +5,7 @@
     [paramlist]
     [block 
       [while 
-        [== [var a] [1]]
+        [== [var [a]] [1]]
         [block 
         ]
       ]

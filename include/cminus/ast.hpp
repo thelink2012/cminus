@@ -264,15 +264,8 @@ class ASTSelectionStmt : public ASTStmt
 {
 public:
     explicit ASTSelectionStmt(std::shared_ptr<ASTExpr> expr,
-                              std::shared_ptr<ASTStmt> stmt) :
-        expr(std::move(expr)),
-        stmt1(std::move(stmt))
-    {
-    }
-
-    explicit ASTSelectionStmt(std::shared_ptr<ASTExpr> expr,
                               std::shared_ptr<ASTStmt> stmt1,
-                              std::shared_ptr<ASTStmt> stmt2) :
+                              std::shared_ptr<ASTStmt> stmt2 = nullptr) :
         expr(std::move(expr)),
         stmt1(std::move(stmt1)),
         stmt2(std::move(stmt2))
@@ -284,7 +277,7 @@ public:
 private:
     std::shared_ptr<ASTExpr> expr;
     std::shared_ptr<ASTStmt> stmt1;
-    std::shared_ptr<ASTStmt> stmt2;
+    std::shared_ptr<ASTStmt> stmt2; //< may be null for no-else
 };
 
 class ASTIterationStmt : public ASTStmt
@@ -307,11 +300,7 @@ private:
 class ASTReturnStmt : public ASTStmt
 {
 public:
-    explicit ASTReturnStmt()
-    {
-    }
-
-    explicit ASTReturnStmt(std::shared_ptr<ASTExpr> expr) :
+    explicit ASTReturnStmt(std::shared_ptr<ASTExpr> expr = nullptr) :
         expr(std::move(expr))
     {
     }
@@ -319,6 +308,6 @@ public:
     virtual void dump(std::string&, size_t depth);
 
 private:
-    std::shared_ptr<ASTExpr> expr;
+    std::shared_ptr<ASTExpr> expr; //< may be null
 };
 }

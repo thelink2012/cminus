@@ -214,7 +214,9 @@ void ASTVarRef::dump(std::string& dest, size_t depth)
     dest += '[';
     dest += "var";
     dest += ' ';
+    dest += '[';
     dest += this->varname;
+    dest += ']';
     if(this->expr)
     {
         dest += ' ';

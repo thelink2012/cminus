@@ -22,6 +22,7 @@ enum class Diag
     parser_expected_token, // %0 => Category
     parser_expected_type,
     parser_expected_expression,
+    parser_expected_statement,
     parser_number_too_big,
 };
 

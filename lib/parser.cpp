@@ -184,9 +184,10 @@ auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
         case Category::Return:
             return parse_return_stmt();
         default:
+            diagman.report(scanner.get_source(), peek_word.location(), 
+                           Diag::parser_expected_statement);
             return nullptr;
     }
-
 }
 
 // <expression-stmt> ::= <expression> ; | ;
@@ -281,7 +282,7 @@ auto Parser::parse_selection_stmt() -> std::shared_ptr<ASTSelectionStmt>
             // Once consumed the if's statement is need to check if there's an "else"
             // and if there's our job is parse it.
             if(!try_consume(Category::Else))
-                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1));
+                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), nullptr);
             
             if(auto stmt2 = parse_statement())
                 return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), std::move(stmt2));
@@ -319,7 +320,7 @@ auto Parser::parse_return_stmt() -> std::shared_ptr<ASTReturnStmt>
         return nullptr;
 
     if(try_consume(Category::Semicolon))
-        return sema.act_on_return_stmt();
+        return sema.act_on_return_stmt(nullptr);
 
     if(auto expr = parse_expression())
     {

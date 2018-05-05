@@ -5,13 +5,13 @@
     [paramlist]
     [block 
       [if 
-        [== [var a] [var b]]
+        [== [var [a]] [var [b]]]
         [return ]
       ]
       [if 
-        [>= [var a] [var b]]
-        [assign [var a] 
-          [+ [var a] [var b]]]
+        [>= [var [a]] [var [b]]]
+        [assign [var [a]] 
+          [+ [var [a]] [var [b]]]]
         [block 
           [return ]
         ]

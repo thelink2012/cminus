@@ -3,10 +3,10 @@
     [void]
     [main]
     [paramlist]
-    [block [var x [0]] [var x [1]] [var x [99]] [var x [var y]] [var x 
+    [block [var [x] [0]] [var [x] [1]] [var [x] [99]] [var [x] [var [y]]] [var [x]
         [+ [1] 
-          [* [var y] 
-            [- [var z] [var w]]]]] 
+          [* [var [y]] 
+            [- [var [z]] [var [w]]]]]] 
     ]
   ]
 ]

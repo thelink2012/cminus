@@ -137,11 +137,8 @@ public:
             -> std::shared_ptr<ASTCompoundStmt>;
 
     /// Acts on a selection statement.
-    auto act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
-                               std::shared_ptr<ASTStmt> stmt)
-            -> std::shared_ptr<ASTSelectionStmt>;
-
-    /// Acts on a selection statement.
+    ///
+    /// The `stmt2` may be `nullptr` for no else statement.
     auto act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
                                std::shared_ptr<ASTStmt> stmt1,
                                std::shared_ptr<ASTStmt> stmt2)
@@ -153,9 +150,8 @@ public:
             -> std::shared_ptr<ASTIterationStmt>;
 
     /// Acts on a return statement.
-    auto act_on_return_stmt() -> std::shared_ptr<ASTReturnStmt>;
-
-    /// Acts on a return statement.
+    ///
+    /// The returned `expr` may be `nullptr` for no expression to return.
     auto act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
             -> std::shared_ptr<ASTReturnStmt>;
 

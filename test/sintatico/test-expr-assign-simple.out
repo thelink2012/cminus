@@ -4,11 +4,11 @@
     [main]
     [paramlist]
     [block 
-      [assign [var x] [var y]] 
-      [assign [var x] [10]] 
-      [assign [var x] 
+      [assign [var [x]] [var [y]]] 
+      [assign [var [x]] [10]] 
+      [assign [var [x]] 
         [* 
-          [+ [1] [2]] [var y]]] 
+          [+ [1] [2]] [var [y]]]] 
     ]
   ]
 ]
