@@ -174,6 +174,11 @@ public:
     auto act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
             -> std::shared_ptr<ASTVarRef>;
 
+    /// Acts on a function call.
+    auto act_on_call(const Word& name,
+                     std::vector<std::shared_ptr<ASTExpr>> args)
+            -> std::shared_ptr<ASTFunCall>;
+
     /// Converts a word into a number.
     int32_t number_from_word(const Word& word);
 

@@ -227,6 +227,21 @@ void ASTVarRef::dump(std::string& dest, size_t depth)
 
 void ASTFunCall::dump(std::string& dest, size_t depth)
 {
-    // TODO
+    dest += '[';
+    dest += "funccall";
+    dest += ' ';
+    dest += '[';
+    dest += this->funname;
+    dest += ']';
+
+    dest += ' ';
+    dest += '[';
+    dest += "arglist";
+    dest += ' ';
+    for(auto& expr : args)
+        expr->dump(dest, depth + 1);
+    dest += ']';
+
+    dest += ']';
 }
 }

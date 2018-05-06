@@ -13,12 +13,12 @@ class ASTBinaryExpr;
 class ASTAssignExpr;
 class ASTNumber;
 class ASTVarRef;
-class ASTFunCall;
 class ASTNullStmt;
 class ASTCompoundStmt;
 class ASTSelectionStmt;
 class ASTIterationStmt;
 class ASTReturnStmt;
+class ASTFunCall;
 
 /// Base of any AST node.
 class AST : public std::enable_shared_from_this<AST>
@@ -226,13 +226,6 @@ public:
     }
 };
 
-/// Node of a function call in the AST.
-class ASTFunCall : public ASTExpr
-{
-public:
-    virtual void dump(std::string&, size_t depth);
-};
-
 class ASTNullStmt : public ASTStmt
 {
 public:
@@ -309,5 +302,24 @@ public:
 
 private:
     std::shared_ptr<ASTExpr> expr; //< may be null
+};
+
+
+/// Node of a function call in the AST.
+class ASTFunCall : public ASTExpr
+{
+public:
+    explicit ASTFunCall(SourceRange funname,
+                        std::vector<std::shared_ptr<ASTExpr>> args) :
+        funname(funname),
+        args(std::move(args))
+    {
+    }
+
+    virtual void dump(std::string&, size_t depth);
+
+private:
+    SourceRange funname;
+    std::vector<std::shared_ptr<ASTExpr>> args;
 };
 }

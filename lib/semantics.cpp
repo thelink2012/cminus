@@ -164,6 +164,14 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
     return std::make_shared<ASTVarRef>(name.lexeme, std::move(index));
 }
 
+auto Semantics::act_on_call(const Word& name,
+                            std::vector<std::shared_ptr<ASTExpr>> args)
+        -> std::shared_ptr<ASTFunCall>
+{
+    assert(name.category == Category::Identifier);
+    return std::make_shared<ASTFunCall>(name.lexeme, std::move(args));
+}
+
 auto Semantics::number_from_word(const Word& word) -> int32_t
 {
     assert(word.category == Category::Number);

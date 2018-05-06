@@ -504,10 +504,42 @@ auto Parser::parse_var() -> std::shared_ptr<ASTVarRef>
 }
 
 // <call> ::= ID ( <args> )
+// <args> ::= <arg-list> | empty
+// <arg-list> ::= <arg-list> , <expression> | <expression>
 auto Parser::parse_call() -> std::shared_ptr<ASTFunCall>
 {
-    // TODO
-    return nullptr;
+    auto id = expect_and_consume(Category::Identifier);
+    if(!id)
+        return nullptr;
+
+    if(!expect_and_consume(Category::OpenParen))
+        return nullptr;
+
+    std::vector<std::shared_ptr<ASTExpr>> args;
+
+    if(peek_word.category != Category::CloseParen)
+    {
+        if(auto expr = parse_expression())
+            args.push_back(expr);
+        else
+            return nullptr;
+    }
+
+    while(peek_word.category != Category::CloseParen)
+    {
+        if(!expect_and_consume(Category::Comma))
+            return nullptr;
+
+        if(auto expr = parse_expression())
+            args.push_back(expr);
+        else
+            return nullptr;
+    }
+
+    if(!expect_and_consume(Category::CloseParen))
+        return nullptr;
+
+    return sema.act_on_call(*id, std::move(args));
 }
 }
 
