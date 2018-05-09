@@ -1,16 +1,16 @@
 [program 
-  [decfunc 
+  [fundecl 
     [void]
     [foo]
     [paramlist 
-      [decparm [a]]
-      [decparm [b]]
-      [decparm [c]]
+      [param [a]]
+      [param [b]]
+      [param [c]]
     ]
     [block 
     ]
   ]
-  [decfunc 
+  [fundecl 
     [void]
     [main]
     [paramlist]

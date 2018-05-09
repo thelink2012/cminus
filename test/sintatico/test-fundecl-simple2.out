@@ -1,5 +1,5 @@
 [program 
-  [decfunc 
+  [fundecl 
     [void]
     [foo]
     [paramlist]
@@ -8,7 +8,7 @@
       [* [2] [2]] 
     ]
   ]
-  [decfunc 
+  [fundecl 
     [void]
     [main]
     [paramlist]

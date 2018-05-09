@@ -1,10 +1,10 @@
 [program 
-  [decfunc 
+  [fundecl 
     [void]
     [main]
     [paramlist]
     [block 
-      [assign [var [x]] 
+      [= [var [x]] 
         [< [var [y]] [2]]] 
     ]
   ]

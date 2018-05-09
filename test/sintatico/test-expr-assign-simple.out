@@ -1,12 +1,12 @@
 [program 
-  [decfunc 
+  [fundecl 
     [void]
     [main]
     [paramlist]
     [block 
-      [assign [var [x]] [var [y]]] 
-      [assign [var [x]] [10]] 
-      [assign [var [x]] 
+      [= [var [x]] [var [y]]] 
+      [= [var [x]] [10]] 
+      [= [var [x]] 
         [* 
           [+ [1] [2]] [var [y]]]] 
     ]

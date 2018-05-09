@@ -1,34 +1,34 @@
 [program 
-  [decvar [x]]
-  [decfunc 
+  [vardecl [x]]
+  [fundecl 
     [void]
     [foo]
     [paramlist]
     [block 
     ]
   ]
-  [decfunc 
+  [fundecl 
     [int]
     [bar]
     [paramlist 
-      [decparm [x]] 
-      [decparm [y]]]
+      [param [x]] 
+      [param [y]]]
     [block 
     ]
   ]
-  [decvar [y] [10]]
-  [decfunc 
+  [vardecl [y] [10]]
+  [fundecl 
     [int]
     [baz]
     [paramlist]
     [block 
     ]
   ]
-  [decvar [z]]
-  [decvar [w]]
-  [decvar [j] [9]]
-  [decvar [k]]
-  [decfunc 
+  [vardecl [z]]
+  [vardecl [w]]
+  [vardecl [j] [9]]
+  [vardecl [k]]
+  [fundecl 
     [void]
     [main]
     [paramlist]

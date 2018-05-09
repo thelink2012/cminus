@@ -27,7 +27,7 @@ static auto operation(ASTBinaryExpr::Operation op)
         case ASTBinaryExpr::Operation::NotEqual:
             return "!=";
         case ASTBinaryExpr::Operation::Assign:
-            return "assign";
+            return "=";
     }
 }
 
@@ -56,7 +56,7 @@ void ASTVarDecl::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "decvar";
+    dest += "vardecl";
     dest += ' ';
     dest += '[';
     dest += this->name;
@@ -74,7 +74,7 @@ void ASTParmVarDecl::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "decparm";
+    dest += "param";
     dest += ' ';
     dest += '[';
     dest += this->name;
@@ -90,7 +90,7 @@ void ASTFunDecl::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "decfunc";
+    dest += "fundecl";
     dest += ' ';
 
     newline(dest, depth + 1);
@@ -121,7 +121,7 @@ void ASTNullStmt::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "null";
+    dest += ";";
     dest += ']';
 }
 
@@ -180,10 +180,12 @@ void ASTReturnStmt::dump(std::string& dest, size_t depth)
     newline(dest, depth);
     dest += '[';
     dest += "return";
-    dest += ' ';
 
     if(expr)
+    {
+        dest += ' ';
         expr->dump(dest, depth + 1);
+    }
 
     dest += ']';
 }
@@ -227,21 +229,26 @@ void ASTVarRef::dump(std::string& dest, size_t depth)
 
 void ASTFunCall::dump(std::string& dest, size_t depth)
 {
+    newline(dest, depth);
     dest += '[';
-    dest += "funccall";
-    dest += ' ';
+    dest += "call";
+
+    newline(dest, depth + 1);
     dest += '[';
     dest += this->funname;
     dest += ']';
 
-    dest += ' ';
+    newline(dest, depth + 1);
     dest += '[';
     dest += "arglist";
-    dest += ' ';
     for(auto& expr : args)
-        expr->dump(dest, depth + 1);
+    {
+        dest += ' ';
+        expr->dump(dest, depth + 2);
+    }
     dest += ']';
 
+    newline(dest, depth);
     dest += ']';
 }
 }

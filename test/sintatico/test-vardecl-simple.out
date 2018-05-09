@@ -1,6 +1,6 @@
 [program 
-  [decvar [var1]]
-  [decfunc 
+  [vardecl [var1]]
+  [fundecl 
     [void]
     [main]
     [paramlist]

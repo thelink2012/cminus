@@ -1,0 +1,43 @@
+[program 
+  [vardecl [g]]
+  [fundecl 
+    [int]
+    [foo]
+    [paramlist 
+      [param [x]] 
+      [param [y]] 
+      [param [z] [array]]]
+    [block 
+      [= [var [z] [0]] [0]]
+      [= [var [y]] 
+        [+ 
+          [* [var [x]] [var [y]]] [2]]]
+      [if 
+        [== [var [y]] [0]]
+        [block 
+          [= [var [y]] [1]]
+        ]
+      ]
+      [return [var [y]]]
+    ]
+  ]
+  [fundecl 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [vardecl [a] [10]]
+      [while 
+        [< [var [g]] [10]]
+        [block 
+          [= [var [g]] 
+            [call
+              [foo]
+              [arglist [var [g]] [2] [var [a]]]
+            ]]
+          [;]
+        ]
+      ]
+    ]
+  ]
+]

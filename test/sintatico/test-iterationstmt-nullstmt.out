@@ -1,5 +1,5 @@
 [program 
-  [decfunc 
+  [fundecl 
     [void]
     [main]
     [paramlist]
@@ -7,7 +7,7 @@
       [while 
         [== [var [a]] 
           [+ [var [b]] [1]]]
-        [null]
+        [;]
       ]
       [return ]
     ]
