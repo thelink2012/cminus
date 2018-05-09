@@ -1,7 +1,0 @@
-void main(void){
-	while()
-		a=a+1;
-	if()
-		a=0;
-	return;
-}

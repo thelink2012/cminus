@@ -1,0 +1,10 @@
+[program 
+  [fundecl 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [;]
+    ]
+  ]
+]

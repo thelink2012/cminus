@@ -4,12 +4,8 @@
     [main]
     [paramlist]
     [block 
-      [while 
-        [== [var [a]] [1]]
-        [block 
-        ]
+      [block 
       ]
-      [return ]
     ]
   ]
 ]

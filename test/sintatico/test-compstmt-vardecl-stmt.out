@@ -1,0 +1,15 @@
+[program 
+  [fundecl 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [block 
+        [vardecl [x]]
+        [vardecl [y]]
+        [+ [var [x]] [var [y]]]
+        [+ [var [y]] [var [x]]]
+      ]
+    ]
+  ]
+]

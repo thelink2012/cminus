@@ -1,0 +1,15 @@
+[program 
+  [fundecl 
+    [void]
+    [main]
+    [paramlist]
+    [block 
+      [if 
+        [== [1] [1]][1][2]
+      ]
+      [if 
+        [== [1] [1]][3]
+      ]
+    ]
+  ]
+]
