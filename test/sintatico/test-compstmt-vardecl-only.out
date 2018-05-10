@@ -1,13 +1,13 @@
 [program 
-  [fundecl 
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
-      [block 
-        [vardecl [x]]
-        [vardecl [y]]
-        [vardecl [z]]
+    [params]
+    [compound-stmt 
+      [compound-stmt 
+        [var-declaration [int] [x]]
+        [var-declaration [int] [y]]
+        [var-declaration [int] [z]]
       ]
     ]
   ]

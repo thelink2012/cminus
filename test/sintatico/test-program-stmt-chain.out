@@ -1,20 +1,20 @@
 [program 
-  [fundecl 
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
-      [if 
+    [params]
+    [compound-stmt 
+      [selection-stmt 
         [== [1] [1]]
-        [while 
+        [iteration-stmt 
           [== [1] [1]]
-          [if 
+          [selection-stmt 
             [== [1] [1]]
-            [return]
-            [if 
+            [return-stmt]
+            [selection-stmt 
               [== [2] [2]]
-              [return]
-              [while [1]
+              [return-stmt]
+              [iteration-stmt [1]
                 [;]
               ]
             ]

@@ -1,9 +1,9 @@
 [program 
-  [fundecl 
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block [var [x] [0]] [var [x] [1]] [var [x] [99]] [var [x] [var [y]]] [var [x]
+    [params]
+    [compound-stmt [var [x] [0]] [var [x] [1]] [var [x] [99]] [var [x] [var [y]]] [var [x]
         [+ [1] 
           [* [var [y]] 
             [- [var [z]] [var [w]]]]]] 

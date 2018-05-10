@@ -56,7 +56,9 @@ void ASTVarDecl::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "vardecl";
+    dest += "var-declaration";
+    dest += ' ';
+    dest += "[int]";
     dest += ' ';
     dest += '[';
     dest += this->name;
@@ -76,12 +78,14 @@ void ASTParmVarDecl::dump(std::string& dest, size_t depth)
     dest += '[';
     dest += "param";
     dest += ' ';
+    dest += "[int]";
+    dest += ' ';
     dest += '[';
     dest += this->name;
     dest += ']';
     if(this->is_array)
     {
-        dest += " [array]";
+        dest += " [\\[\\]]";
     }
     dest += ']';
 }
@@ -90,7 +94,7 @@ void ASTFunDecl::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "fundecl";
+    dest += "fun-declaration";
     dest += ' ';
 
     newline(dest, depth + 1);
@@ -103,7 +107,7 @@ void ASTFunDecl::dump(std::string& dest, size_t depth)
 
     newline(dest, depth + 1);
     dest += '[';
-    dest += "paramlist";
+    dest += "params";
     for(auto& param : this->params)
     {
         dest += ' ';
@@ -129,7 +133,7 @@ void ASTCompoundStmt::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "block";
+    dest += "compound-stmt";
     dest += ' ';
 
     for(auto& decl : decls)
@@ -146,7 +150,7 @@ void ASTSelectionStmt::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "if";
+    dest += "selection-stmt";
     dest += ' ';
 
     expr->dump(dest, depth + 1);
@@ -164,7 +168,7 @@ void ASTIterationStmt::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "while";
+    dest += "iteration-stmt";
     dest += ' ';
 
     expr->dump(dest, depth + 1);
@@ -179,7 +183,7 @@ void ASTReturnStmt::dump(std::string& dest, size_t depth)
 {
     newline(dest, depth);
     dest += '[';
-    dest += "return";
+    dest += "return-stmt";
 
     if(expr)
     {
@@ -240,7 +244,7 @@ void ASTFunCall::dump(std::string& dest, size_t depth)
 
     newline(dest, depth + 1);
     dest += '[';
-    dest += "arglist";
+    dest += "args";
     for(auto& expr : args)
     {
         dest += ' ';

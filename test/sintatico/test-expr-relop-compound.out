@@ -1,9 +1,9 @@
 [program 
-  [fundecl 
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
+    [params]
+    [compound-stmt 
       [< 
         [* [1] [2]] 
         [+ [3] [4]]]

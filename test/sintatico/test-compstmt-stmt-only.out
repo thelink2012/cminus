@@ -1,10 +1,10 @@
 [program 
-  [fundecl 
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
-      [block 
+    [params]
+    [compound-stmt 
+      [compound-stmt 
         [+ [1] [2]]
         [+ [2] [3]]
       ]

@@ -1,38 +1,38 @@
 [program 
-  [vardecl [x]]
-  [fundecl 
+  [var-declaration [int] [x]]
+  [fun-declaration 
     [void]
     [foo]
-    [paramlist]
-    [block 
+    [params]
+    [compound-stmt 
     ]
   ]
-  [fundecl 
+  [fun-declaration 
     [int]
     [bar]
-    [paramlist 
-      [param [x]] 
-      [param [y]]]
-    [block 
+    [params 
+      [param [int] [x]] 
+      [param [int] [y]]]
+    [compound-stmt 
     ]
   ]
-  [vardecl [y] [10]]
-  [fundecl 
+  [var-declaration [int] [y] [10]]
+  [fun-declaration 
     [int]
     [baz]
-    [paramlist]
-    [block 
+    [params]
+    [compound-stmt 
     ]
   ]
-  [vardecl [z]]
-  [vardecl [w]]
-  [vardecl [j] [9]]
-  [vardecl [k]]
-  [fundecl 
+  [var-declaration [int] [z]]
+  [var-declaration [int] [w]]
+  [var-declaration [int] [j] [9]]
+  [var-declaration [int] [k]]
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
+    [params]
+    [compound-stmt 
     ]
   ]
 ]

@@ -1,13 +1,13 @@
 [program 
-  [fundecl 
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
-      [if 
+    [params]
+    [compound-stmt 
+      [selection-stmt 
         [== [1] [1]][1][2]
       ]
-      [if 
+      [selection-stmt 
         [== [1] [1]][3]
       ]
     ]

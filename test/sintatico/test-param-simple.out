@@ -1,17 +1,17 @@
 [program 
-  [fundecl 
+  [fun-declaration 
     [void]
     [foo]
-    [paramlist 
-      [param [a]]]
-    [block 
+    [params 
+      [param [int] [a]]]
+    [compound-stmt 
     ]
   ]
-  [fundecl 
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
+    [params]
+    [compound-stmt 
     ]
   ]
 ]

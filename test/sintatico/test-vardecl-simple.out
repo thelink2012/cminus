@@ -1,10 +1,10 @@
 [program 
-  [vardecl [var1]]
-  [fundecl 
+  [var-declaration [int] [var1]]
+  [fun-declaration 
     [void]
     [main]
-    [paramlist]
-    [block 
+    [params]
+    [compound-stmt 
     ]
   ]
 ]
