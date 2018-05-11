@@ -1,0 +1,45 @@
+[program 
+  [fun-declaration 
+    [void]
+    [foo]
+    [params]
+    [compound-stmt 
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [baz]
+    [params 
+      [param [int] [x]]]
+    [compound-stmt 
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [bar]
+    [params 
+      [param [int] [x]] 
+      [param [int] [y]]]
+    [compound-stmt 
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [call
+        [foo]
+        [args]
+      ]
+      [call
+        [baz]
+        [args [1]]
+      ]
+      [call
+        [bar]
+        [args [1] [2]]
+      ]
+    ]
+  ]
+]

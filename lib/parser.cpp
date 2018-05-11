@@ -517,7 +517,7 @@ auto Parser::parse_call() -> std::shared_ptr<ASTFunCall>
     if(peek_word.category != Category::CloseParen)
     {
         if(auto expr = parse_expression())
-            args.push_back(expr);
+            args.push_back(std::move(expr));
         else
             return nullptr;
     }
@@ -528,7 +528,7 @@ auto Parser::parse_call() -> std::shared_ptr<ASTFunCall>
             return nullptr;
 
         if(auto expr = parse_expression())
-            args.push_back(expr);
+            args.push_back(std::move(expr));
         else
             return nullptr;
     }
