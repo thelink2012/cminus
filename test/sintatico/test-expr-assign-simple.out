@@ -4,11 +4,13 @@
     [main]
     [params]
     [compound-stmt 
-      [= [var [x]] [var [y]]] 
-      [= [var [x]] [10]] 
+      [var-declaration [int] [x]]
+      [var-declaration [int] [y]]
+      [= [var [x]] [var [y]]]
+      [= [var [x]] [10]]
       [= [var [x]] 
         [* 
-          [+ [1] [2]] [var [y]]]] 
+          [+ [1] [2]] [var [y]]]]
     ]
   ]
 ]
