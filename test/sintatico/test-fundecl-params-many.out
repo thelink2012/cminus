@@ -1,0 +1,20 @@
+[program 
+  [fun-declaration 
+    [void]
+    [foo]
+    [params 
+      [param [int] [a]]
+      [param [int] [b]]
+      [param [int] [c]]
+    ]
+    [compound-stmt 
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+    ]
+  ]
+]

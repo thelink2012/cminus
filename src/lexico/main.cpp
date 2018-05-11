@@ -58,14 +58,10 @@ int lexico(std::FILE* istream, std::FILE* ostream)
 
     diagman.handler([&](const Diagnostic& diag) {
         auto [line, column] = source->find_line_and_column(diag.loc);
-        switch(diag.code)
-        {
-            case Diag::lexer_bad_number:
-            case Diag::lexer_bad_char:
-            case Diag::lexer_unclosed_comment:
-                error = std::pair{line, diag.ranges.front()};
-                break;
-        }
+        if(!diag.ranges.empty())
+            error = std::pair{line, diag.ranges.front()};
+        else
+            error = std::pair{line, SourceRange{0, 0}};
         return true;
     });
 
@@ -78,13 +74,15 @@ int lexico(std::FILE* istream, std::FILE* ostream)
     };
 
     Scanner scanner(*source, diagman);
-    while(auto word = scanner.next_word())
+    for(auto word = scanner.next_word();
+        word.category != Category::Eof;
+        word = scanner.next_word())
     {
         if(error)
             break;
-        auto [line, column] = source->find_line_and_column(word->lexeme.begin());
-        auto catname = category_to_string(word->category);
-        print_line(line, catname, word->lexeme);
+        auto [line, column] = source->find_line_and_column(word.lexeme.begin());
+        auto catname = category_to_string(word.category);
+        print_line(line, catname, word.lexeme);
     }
 
     if(error)

@@ -1,0 +1,30 @@
+[program 
+  [fun-declaration 
+    [void]
+    [f0]
+    [params]
+    [compound-stmt 
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [f1]
+    [params]
+    [compound-stmt [1][2][3]
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [f2]
+    [params]
+    [compound-stmt [1]
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+    ]
+  ]
+]

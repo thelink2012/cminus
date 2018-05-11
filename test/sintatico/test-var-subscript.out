@@ -1,0 +1,16 @@
+[program 
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [var-declaration [int] [x] [100]]
+      [var-declaration [int] [y]]
+      [var-declaration [int] [z]]
+      [var-declaration [int] [w]][var [x] [0]][var [x] [1]][var [x] [99]][var [x] [var [y]]][var [x] 
+        [+ [1] 
+          [* [var [y]] 
+            [- [var [z]] [var [w]]]]]]
+    ]
+  ]
+]

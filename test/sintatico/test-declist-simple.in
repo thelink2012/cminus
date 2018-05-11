@@ -1,0 +1,26 @@
+int x;
+
+void foo(void)
+{
+}
+
+int bar(int x, int y)
+{
+    /* TODO return */
+}
+
+int y[10];
+
+int baz(void)
+{
+    /* TODO return */
+}
+
+int z;
+int w;
+int j[9];
+int k;
+
+void main(void)
+{
+}

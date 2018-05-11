@@ -47,7 +47,7 @@ bool Scanner::lex_number(SourceLocation& out_pos)
     return true;
 }
 
-auto Scanner::next_word() -> std::optional<Word>
+auto Scanner::next_word() -> Word
 {
     SourceLocation token_start;
 
@@ -59,7 +59,7 @@ next_word_again:
     switch(*current_pos)
     {
         case '\0':
-            return std::nullopt;
+            return Word(Category::Eof, current_pos, current_pos);
 
         case ' ':
         case '\t':
@@ -85,7 +85,7 @@ next_word_again:
                 // End of stream but no end of comment found.
                 diagman.report(source, token_start, Diag::lexer_unclosed_comment)
                         .range(SourceRange(token_start, 2));
-                return std::nullopt;
+                return Word(Category::Eof, current_pos, current_pos);
             }
             return Word(Category::Divide, token_start, current_pos);
 

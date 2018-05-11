@@ -1,0 +1,38 @@
+[program 
+  [var-declaration [int] [x]]
+  [fun-declaration 
+    [void]
+    [foo]
+    [params]
+    [compound-stmt 
+    ]
+  ]
+  [fun-declaration 
+    [int]
+    [bar]
+    [params 
+      [param [int] [x]] 
+      [param [int] [y]]]
+    [compound-stmt 
+    ]
+  ]
+  [var-declaration [int] [y] [10]]
+  [fun-declaration 
+    [int]
+    [baz]
+    [params]
+    [compound-stmt 
+    ]
+  ]
+  [var-declaration [int] [z]]
+  [var-declaration [int] [w]]
+  [var-declaration [int] [j] [9]]
+  [var-declaration [int] [k]]
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+    ]
+  ]
+]

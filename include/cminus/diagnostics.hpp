@@ -10,16 +10,24 @@ namespace cminus
 class DiagnosticManager;
 class DiagnosticBuilder;
 
+enum class Category;
+
 /// Diagnostic enumeration.
 enum class Diag
 {
     lexer_bad_number,
     lexer_bad_char,
     lexer_unclosed_comment,
+
+    parser_expected_token, // %0 => Category
+    parser_expected_type,
+    parser_expected_expression,
+    parser_expected_statement,
+    parser_number_too_big,
 };
 
 /// Parameter for `Diag` printing.
-using DiagParam = std::variant<int>;
+using DiagParam = std::variant<Category>;
 
 /// Diagnostic information.
 struct Diagnostic
@@ -85,6 +93,9 @@ class DiagnosticManager
 {
 public:
     explicit DiagnosticManager();
+
+    DiagnosticManager(const DiagnosticManager&) = delete;
+    DiagnosticManager& operator=(const DiagnosticManager&) = delete;
 
     /// Reports a compiler diagnostic.
     template<typename... Args>

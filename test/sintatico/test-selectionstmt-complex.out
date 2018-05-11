@@ -1,0 +1,92 @@
+[program 
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [var-declaration [int] [x]]
+      [selection-stmt 
+        [== [1] [1]]
+        [+ [var [x]] [1]]
+      ]
+      [selection-stmt 
+        [== [1] [1]][1]
+      ]
+      [selection-stmt 
+        [== [1] [1]][2]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [compound-stmt 
+        ]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [selection-stmt 
+          [== [2] [2]]
+          [;]
+        ]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [iteration-stmt 
+          [== [3] [3]]
+          [;]
+        ]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [return-stmt]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;]
+        [+ [var [x]] [1]]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;][1]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;][2]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;]
+        [;]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;]
+        [compound-stmt 
+        ]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;]
+        [selection-stmt 
+          [== [2] [2]]
+          [;]
+        ]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;]
+        [iteration-stmt 
+          [== [3] [3]]
+          [;]
+        ]
+      ]
+      [selection-stmt 
+        [== [1] [1]]
+        [;]
+        [return-stmt]
+      ]
+    ]
+  ]
+]

@@ -1,0 +1,43 @@
+[program 
+  [var-declaration [int] [g]]
+  [fun-declaration 
+    [int]
+    [foo]
+    [params 
+      [param [int] [x]] 
+      [param [int] [y]] 
+      [param [int] [z] [\[\]]]]
+    [compound-stmt 
+      [= [var [z] [0]] [0]]
+      [= [var [y]] 
+        [+ 
+          [* [var [x]] [var [y]]] [2]]]
+      [selection-stmt 
+        [== [var [y]] [0]]
+        [compound-stmt 
+          [= [var [y]] [1]]
+        ]
+      ]
+      [return-stmt [var [y]]]
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [var-declaration [int] [a] [10]]
+      [iteration-stmt 
+        [< [var [g]] [10]]
+        [compound-stmt 
+          [= [var [g]] 
+            [call
+              [foo]
+              [args [var [g]] [2] [var [a]]]
+            ]]
+          [;]
+        ]
+      ]
+    ]
+  ]
+]
