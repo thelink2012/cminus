@@ -169,7 +169,8 @@ auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
 {
     // Decide which parser to take based on the FIRST set of the subparsers.
-    switch(peek_word.category){
+    switch(peek_word.category)
+    {
         case Category::Identifier:
         case Category::Number:
         case Category::OpenParen:
@@ -184,7 +185,7 @@ auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
         case Category::Return:
             return parse_return_stmt();
         default:
-            diagman.report(scanner.get_source(), peek_word.location(), 
+            diagman.report(scanner.get_source(), peek_word.location(),
                            Diag::parser_expected_statement);
             return nullptr;
     }
@@ -279,9 +280,9 @@ auto Parser::parse_selection_stmt() -> std::shared_ptr<ASTSelectionStmt>
         {
             if(!try_consume(Category::Else))
                 return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), nullptr);
-            
+
             if(auto stmt2 = parse_statement())
-                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), 
+                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1),
                                                   std::move(stmt2));
             return nullptr;
         }

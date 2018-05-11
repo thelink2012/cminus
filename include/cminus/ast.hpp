@@ -304,7 +304,6 @@ private:
     std::shared_ptr<ASTExpr> expr; //< may be null
 };
 
-
 /// Node of a function call in the AST.
 class ASTFunCall : public ASTExpr
 {
