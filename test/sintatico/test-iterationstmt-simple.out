@@ -4,13 +4,8 @@
     [main]
     [params]
     [compound-stmt 
-      [selection-stmt 
+      [iteration-stmt 
         [== [1] [1]]
-        [;]
-      ]
-      [selection-stmt 
-        [== [1] [1]]
-        [;]
         [;]
       ]
     ]
