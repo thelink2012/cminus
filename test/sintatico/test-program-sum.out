@@ -1,0 +1,36 @@
+[program 
+  [fun-declaration 
+    [int]
+    [sum]
+    [params 
+      [param [int] [x]]]
+    [compound-stmt 
+      [selection-stmt 
+        [> [var [x]] [0]]
+        [return-stmt 
+          [+ [var [x]] 
+            [call
+              [sum]
+              [args 
+                [- [var [x]] [1]]]
+            ]]]
+      ]
+      [return-stmt [0]]
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [call
+        [println]
+        [args 
+          [call
+            [sum]
+            [args [10]]
+          ]]
+      ]
+    ]
+  ]
+]

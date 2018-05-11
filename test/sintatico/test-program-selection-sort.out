@@ -1,0 +1,102 @@
+[program 
+  [var-declaration [int] [x] [10]]
+  [fun-declaration 
+    [int]
+    [minloc]
+    [params 
+      [param [int] [a] [\[\]]] 
+      [param [int] [low]] 
+      [param [int] [high]]]
+    [compound-stmt 
+      [var-declaration [int] [i]]
+      [var-declaration [int] [x]]
+      [var-declaration [int] [k]]
+      [= [var [k]] [var [low]]]
+      [= [var [x]] [var [a] [var [low]]]]
+      [= [var [i]] 
+        [+ [var [low]] [1]]]
+      [iteration-stmt 
+        [< [var [i]] [var [high]]]
+        [compound-stmt 
+          [selection-stmt 
+            [< [var [a] [var [i]]] [var [x]]]
+            [compound-stmt 
+              [= [var [x]] [var [a] [var [i]]]]
+              [= [var [k]] [var [i]]]
+            ]
+          ]
+          [= [var [i]] 
+            [+ [var [i]] [1]]]
+        ]
+      ]
+      [return-stmt [var [k]]]
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [sort]
+    [params 
+      [param [int] [a] [\[\]]] 
+      [param [int] [low]] 
+      [param [int] [high]]]
+    [compound-stmt 
+      [var-declaration [int] [i]]
+      [var-declaration [int] [k]]
+      [= [var [i]] [var [low]]]
+      [iteration-stmt 
+        [< [var [i]] 
+          [- [var [high]] [1]]]
+        [compound-stmt 
+          [var-declaration [int] [t]]
+          [= [var [k]] 
+            [call
+              [minloc]
+              [args [var [a]] [var [i]] [var [high]]]
+            ]]
+          [= [var [t]] [var [a] [var [k]]]]
+          [= [var [a] [var [k]]] [var [a] [var [i]]]]
+          [= [var [a] [var [i]]] [var [t]]]
+          [= [var [i]] 
+            [+ [var [i]] [1]]]
+        ]
+      ]
+    ]
+  ]
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [var-declaration [int] [i]]
+      [= [var [i]] [0]]
+      [iteration-stmt 
+        [< [var [i]] [10]]
+        [compound-stmt 
+          [= [var [x] [var [i]]] 
+            [call
+              [input]
+              [args]
+            ]]
+          [= [var [i]] 
+            [+ [var [i]] [1]]]
+        ]
+      ]
+      [call
+        [sort]
+        [args [var [x]] [0] [10]]
+      ]
+      [= [var [i]] [0]]
+      [iteration-stmt 
+        [< [var [i]] [10]]
+        [compound-stmt 
+          [call
+            [println]
+            [args [var [x] [var [i]]]]
+          ]
+          [= [var [i]] 
+            [+ [var [i]] [1]]]
+        ]
+      ]
+    ]
+  ]
+]
