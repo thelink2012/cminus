@@ -168,7 +168,7 @@ auto Parser::parse_param() -> std::shared_ptr<ASTParmVarDecl>
 //              | <iteration-stmt> | <return-stmt>
 auto Parser::parse_statement() -> std::shared_ptr<ASTStmt>
 {
-    // Here we can just look at the category of the current word to decide wich parse is needed.
+    // Decide which parser to take based on the FIRST set of the subparsers.
     switch(peek_word.category){
         case Category::Identifier:
         case Category::Number:
@@ -270,22 +270,19 @@ auto Parser::parse_selection_stmt() -> std::shared_ptr<ASTSelectionStmt>
     if(!expect_and_consume(Category::OpenParen))
         return nullptr;
 
-    // Once consumed "if (" we always need to consume some expression.
     if(auto expr = parse_expression())
     {
         if(!expect_and_consume(Category::CloseParen))
             return nullptr;
 
-        // Then we always need to cosnume a statement
         if(auto stmt1 = parse_statement())
         {
-            // Once consumed the if's statement is need to check if there's an "else"
-            // and if there's our job is parse it.
             if(!try_consume(Category::Else))
                 return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), nullptr);
             
             if(auto stmt2 = parse_statement())
-                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), std::move(stmt2));
+                return sema.act_on_selection_stmt(std::move(expr), std::move(stmt1), 
+                                                  std::move(stmt2));
             return nullptr;
         }
         return nullptr;
