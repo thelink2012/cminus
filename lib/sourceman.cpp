@@ -56,21 +56,33 @@ auto SourceFile::from_stream(std::FILE* stream, size_t hint_size)
 auto SourceFile::find_line_and_column(SourceLocation loc) const
         -> std::pair<unsigned, unsigned>
 {
-    assert(loc >= &this->source_data[0]
-           && loc <= &this->source_data[source_size]);
+    if(loc >= &this->source_data[0] && loc <= &this->source_data[source_size])
+    {
+        auto it_line_end = std::upper_bound(lines.begin(), lines.end(), loc);
+        auto line = static_cast<unsigned>(std::distance(lines.begin(), it_line_end));
 
-    auto it_line_end = std::upper_bound(lines.begin(), lines.end(), loc);
-    auto line = static_cast<unsigned>(std::distance(lines.begin(), it_line_end));
+        assert(it_line_end != lines.begin());
+        auto it_line_begin = std::prev(it_line_end);
+        auto column = static_cast<unsigned>(1 + std::distance(*it_line_begin, loc));
 
-    assert(it_line_end != lines.begin());
-    auto it_line_begin = std::prev(it_line_end);
-    auto column = static_cast<unsigned>(1 + std::distance(*it_line_begin, loc));
-
-    return {line, column};
+        return {line, column};
+    }
+    else
+    {
+        // TODO for virtual ranges
+        return {1, 1};
+    }
 }
 
 auto SourceFile::view_with_terminator() const -> SourceRange
 {
     return SourceRange(&source_data[0], source_size + 1);
 }
+
+auto SourceFile::make_source_range(std::string str) -> SourceRange
+{
+    auto [it, inserted] = this->vranges.emplace(std::move(str));
+    return std::string_view(*it);
+}
+
 }

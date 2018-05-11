@@ -221,7 +221,7 @@ void ASTVarRef::dump(std::string& dest, size_t depth)
     dest += "var";
     dest += ' ';
     dest += '[';
-    dest += this->varname;
+    dest += this->decl->get_name();
     dest += ']';
     if(this->expr)
     {
@@ -239,7 +239,7 @@ void ASTFunCall::dump(std::string& dest, size_t depth)
 
     newline(dest, depth + 1);
     dest += '[';
-    dest += this->funname;
+    dest += this->decl->get_name();
     dest += ']';
 
     newline(dest, depth + 1);

@@ -40,50 +40,45 @@ constexpr bool operator!(ScopeFlags value)
     return !(static_cast<uint32_t>(value));
 }
 
+/// This stores scope information, including a symbol table.
 class Scope
 {
 public:
     explicit Scope(ScopeFlags flags, std::unique_ptr<Scope> parent_a) :
         parent_scope(std::move(parent_a)), flags(flags)
     {
-        assert(!!(flags & ScopeFlags::FunScope) ? !!(flags & ScopeFlags::CompoundStmt) : true);
+        assert(!!(flags & ScopeFlags::FunScope) ? 
+                !!(flags & ScopeFlags::CompoundStmt) : true);
     }
 
     Scope(const Scope&) = delete;
     Scope& operator=(const Scope&) = delete;
 
-    auto detach() -> std::unique_ptr<Scope>
-    {
-        auto prev = std::move(this->parent_scope);
-        return prev;
-    }
+    /// Detaches and returns the parent scope.
+    auto detach() -> std::unique_ptr<Scope>;
 
-    auto lookup_local(SourceRange name) const -> std::shared_ptr<ASTDecl>
-    {
-        auto it = symbols.find(name);
-        if(it == symbols.end())
-            return nullptr;
-        return it->second;
-    }
+    /// Performs a symbol lookup.
+    ///
+    /// \returns the symbol information or `nullptr` if no such symbol exists.
+    auto lookup(SourceRange name) const -> std::shared_ptr<ASTDecl>;
 
-    auto add_decl(SourceRange name, std::shared_ptr<ASTDecl> decl)
-            -> std::pair<std::shared_ptr<ASTDecl>, bool>
-    {
-        // If the parent scope is the function parameters scope, look
-        // for this name there. This is considered a redeclaration.
-        if(parent_scope && parent_scope->is_params_scope())
-        {
-            if(auto decl = parent_scope->lookup_local(name))
-                return std::pair{decl, false};
-        }
+    /// Performs a symbol lookup exclusively on this scope.
+    /// 
+    /// In other words, the lookup request is not propagated to the parent scope.
+    auto lookup_exclusive(SourceRange name) const -> std::shared_ptr<ASTDecl>;
 
-        auto [it, inserted] = symbols.emplace(std::move(name), std::move(decl));
-        return std::pair{it->second, inserted};
-    }
+    /// Inserts a new symbol into this scope.
+    /// 
+    /// If this is a redeclaration, no changes are made to the symbol table.
+    ///
+    /// \returns a pair consisting of a pointer to the inserted symbol (or to the
+    /// symbol that prevented the insertion) and a bool denoting whether the
+    /// insertion took place.
+    auto insert(SourceRange name, std::shared_ptr<ASTDecl> decl)
+            -> std::pair<std::shared_ptr<ASTDecl>, bool>;
 
+    /// Checks whether this is the scope of function parameters.
     bool is_params_scope() const { return !!(flags & ScopeFlags::FunParamsScope); }
-
-    // TODO create scopes (in Semantics)
 
 private:
     std::unique_ptr<Scope> parent_scope;
@@ -96,7 +91,7 @@ private:
 class Semantics
 {
 public:
-    explicit Semantics(const SourceFile& source,
+    explicit Semantics(SourceFile& source,
                        DiagnosticManager& diagman);
 
     Semantics(const Semantics&) = delete;
@@ -118,10 +113,14 @@ public:
                          std::shared_ptr<ASTNumber> array_size)
             -> std::shared_ptr<ASTVarDecl>;
 
-    /// Acts on the declaration of a new function.
-    auto act_on_fun_decl(const Word& retn_type, const Word& name,
-                         std::vector<std::shared_ptr<ASTParmVarDecl>> params,
-                         std::shared_ptr<ASTCompoundStmt> comp_stmt)
+    /// Acts on the declaration of a new function, but before its parameters
+    /// and body are parsed.
+    auto act_on_fun_decl_start(const Word& retn_type, const Word& name)
+            -> std::shared_ptr<ASTFunDecl>;
+
+    /// Acts on the declaration of a new function once its parameters and body
+    /// were parsed.
+    auto act_on_fun_decl_end(std::shared_ptr<ASTFunDecl>)
             -> std::shared_ptr<ASTFunDecl>;
 
     /// Acts on the declaration of a parameter.
@@ -182,31 +181,41 @@ public:
     /// Converts a word into a number.
     int32_t number_from_word(const Word& word);
 
-    void enter_scope(ScopeFlags flags)
-    {
-        auto old_scope = std::move(current_scope);
-        auto new_scope = std::make_unique<Scope>(flags, std::move(old_scope));
-        current_scope = std::move(new_scope);
-    }
+    /// Gets the current scope.
+    Scope& get_scope();
 
-    void leave_scope()
-    {
-        current_scope = current_scope->detach();
-        assert(current_scope != nullptr);
-    }
+protected:
+    friend class ParseScope;
 
-    Scope& get_scope()
-    {
-        assert(current_scope != nullptr);
-        return *current_scope;
-    }
+    /// Enters a new scope.
+    /// 
+    /// \note use `ParseScope` instead of this method.
+    void enter_scope(ScopeFlags flags);
+
+    /// Leaves the previous scope.
+    ///
+    /// \note use `ParseScope` instead of this method.
+    void leave_scope();
 
 private:
-    const SourceFile& source;
+    auto make_builtin(Category retn_type, 
+                      std::string name,
+                      std::vector<std::string> params)
+        -> std::shared_ptr<ASTFunDecl>;
+
+private:
+    SourceFile& source;
     DiagnosticManager& diagman;
     std::unique_ptr<Scope> current_scope;
+
+    std::shared_ptr<ASTFunDecl> fun_println;
+    std::shared_ptr<ASTFunDecl> fun_input;
 };
 
+/// This object retains the ownership of a semantic scope.
+///
+/// Once this object is destroyed, the owned scope gets detached from
+/// the semantic context as well.
 class ParseScope
 {
 public:

@@ -97,8 +97,9 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
     if(!expect_and_consume(Category::OpenParen))
         return nullptr;
 
-    std::shared_ptr<ASTCompoundStmt> comp_stmt;
-    std::vector<std::shared_ptr<ASTParmVarDecl>> params;
+    auto fun_decl = sema.act_on_fun_decl_start(*retn, *id);
+    assert(fun_decl != nullptr);
+
     {
         // Enter a new scope context for the parameters.
         // Keep it active while parsing the function body as well.
@@ -114,7 +115,7 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
         else // <param-list> ::= <param-list> , <param> | <param>
         {
             if(auto param = parse_param())
-                params.push_back(param);
+                fun_decl->add_param(std::move(param));
             else
                 return nullptr;
 
@@ -124,7 +125,7 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
                     return nullptr;
 
                 if(auto param = parse_param())
-                    params.push_back(param);
+                    fun_decl->add_param(std::move(param));
                 else
                     return nullptr;
             }
@@ -133,13 +134,15 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
         if(!expect_and_consume(Category::CloseParen))
             return nullptr;
 
-        comp_stmt = parse_compound_stmt(ScopeFlags::CompoundStmt
-                                        | ScopeFlags::FunScope);
+        auto comp_stmt = parse_compound_stmt(ScopeFlags::CompoundStmt
+                                             | ScopeFlags::FunScope);
         if(!comp_stmt)
             return nullptr;
+
+        fun_decl->set_body(std::move(comp_stmt));
     }
 
-    return sema.act_on_fun_decl(*retn, *id, std::move(params), std::move(comp_stmt));
+    return sema.act_on_fun_decl_end(std::move(fun_decl));
 }
 
 // <param> ::= <type-specifier> ID | <type-specifier> ID [ ]

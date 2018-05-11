@@ -1,16 +1,96 @@
 #include <cminus/semantics.hpp>
 
-// NOTE in parser.cpp we assume sema never fails to return a valid shared_ptr!!
-// if we change this assumption, please review parser.cpp
-
 namespace cminus
 {
-Semantics::Semantics(const SourceFile& source_a,
+auto Scope::detach() -> std::unique_ptr<Scope>
+{
+    auto prev = std::move(this->parent_scope);
+    return prev;
+}
+
+auto Scope::lookup_exclusive(SourceRange name) const -> std::shared_ptr<ASTDecl>
+{
+    auto it = symbols.find(name);
+    if(it == symbols.end())
+        return nullptr;
+    return it->second;
+}
+
+auto Scope::lookup(SourceRange name) const -> std::shared_ptr<ASTDecl>
+{
+    auto decl = lookup_exclusive(name);
+    if(decl == nullptr && parent_scope)
+        decl = parent_scope->lookup(name);
+    return decl;
+}
+
+auto Scope::insert(SourceRange name, std::shared_ptr<ASTDecl> decl)
+        -> std::pair<std::shared_ptr<ASTDecl>, bool>
+{
+    // If the parent scope is the function parameters scope, lookup
+    // this name there. This would be considered a redeclaration.
+    if(parent_scope && parent_scope->is_params_scope())
+    {
+        if(auto decl = parent_scope->lookup_exclusive(name))
+            return std::pair{decl, false};
+    }
+
+    auto [it, inserted] = symbols.emplace(std::move(name), std::move(decl));
+    return std::pair{it->second, inserted};
+}
+
+void Semantics::enter_scope(ScopeFlags flags)
+{
+    auto old_scope = std::move(current_scope);
+    auto new_scope = std::make_unique<Scope>(flags, std::move(old_scope));
+    current_scope = std::move(new_scope);
+}
+
+void Semantics::leave_scope()
+{
+    current_scope = current_scope->detach();
+    assert(current_scope != nullptr);
+}
+
+auto Semantics::get_scope() -> Scope&
+{
+    assert(current_scope != nullptr);
+    return *current_scope;
+}
+
+Semantics::Semantics(SourceFile& source_a,
                      DiagnosticManager& diagman_a) :
     source(source_a),
     diagman(diagman_a)
 {
-    this->current_scope = std::make_unique<Scope>(ScopeFlags::TopLevel, nullptr);
+    current_scope = std::make_unique<Scope>(ScopeFlags::TopLevel, nullptr);
+
+    fun_println = make_builtin(Category::Void, "println", { "value" });
+    fun_input = make_builtin(Category::Int, "input", {});
+}
+
+auto Semantics::make_builtin(Category retn_type, 
+                              std::string name_a,
+                              std::vector<std::string> params)
+    -> std::shared_ptr<ASTFunDecl>
+{
+    assert(retn_type == Category::Void
+           || retn_type == Category::Int);
+
+    auto is_void = (retn_type == Category::Void);
+    auto name = source.make_source_range(std::move(name_a));
+    auto fun_decl = std::make_shared<ASTFunDecl>(is_void, name);
+
+    for(auto&& parm_name_owned : params)
+    {
+        auto parm_name = source.make_source_range(std::move(parm_name_owned));
+        fun_decl->add_param(std::make_shared<ASTParmVarDecl>(parm_name, false));
+    }
+
+    auto [decl, inserted] = current_scope->insert(name, fun_decl);
+    assert(inserted);
+
+    return fun_decl;
 }
 
 auto Semantics::act_on_program_start() -> std::shared_ptr<ASTProgram>
@@ -42,7 +122,7 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
 
     auto new_decl = std::make_shared<ASTVarDecl>(name.lexeme, std::move(array_size));
 
-    auto [decl, inserted] = current_scope->add_decl(name.lexeme, new_decl);
+    auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
     if(!inserted)
     {
         // TODO this is a semantic error (redecl)
@@ -56,13 +136,11 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
                 .range(type.lexeme);
     }
 
-    // Return the new declaration no matter what.
+    // Return the new declaration regardless of failures.
     return new_decl;
 }
 
-auto Semantics::act_on_fun_decl(const Word& retn_type, const Word& name,
-                                std::vector<std::shared_ptr<ASTParmVarDecl>> params,
-                                std::shared_ptr<ASTCompoundStmt> comp_stmt)
+auto Semantics::act_on_fun_decl_start(const Word& retn_type, const Word& name)
         -> std::shared_ptr<ASTFunDecl>
 {
     assert(retn_type.category == Category::Void
@@ -71,11 +149,22 @@ auto Semantics::act_on_fun_decl(const Word& retn_type, const Word& name,
 
     auto is_void = (retn_type.category == Category::Void);
 
-    // TODO add decl to scope and all that cheese (semantics)
+    auto new_decl = std::make_shared<ASTFunDecl>(is_void, name.lexeme);
 
-    return std::make_shared<ASTFunDecl>(is_void, name.lexeme,
-                                        std::move(params),
-                                        std::move(comp_stmt));
+    auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
+    if(!inserted)
+    {
+        // TODO this is a semantic error (redecl)
+    }
+
+    // Return the new declaration regardless of failures.
+    return new_decl;
+}
+
+auto Semantics::act_on_fun_decl_end(std::shared_ptr<ASTFunDecl> decl)
+        -> std::shared_ptr<ASTFunDecl>
+{
+    return decl;
 }
 
 auto Semantics::act_on_param_decl(const Word& type, const Word& name,
@@ -86,7 +175,15 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
     assert(name.category == Category::Identifier);
 
     // TODO cannot be void and stuff
-    // TODO add to scope and stuff
+    
+    auto new_decl = std::make_shared<ASTParmVarDecl>(name.lexeme, is_array);
+
+    auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
+    if(!inserted)
+    {
+        // TODO this is a semantic error (redecl)
+    }
+
 
     // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
     if(type.category == Category::Void)
@@ -96,7 +193,8 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
                 .range(type.lexeme);
     }
 
-    return std::make_shared<ASTParmVarDecl>(name.lexeme, is_array);
+    // Return the new declaration regardless of failures.
+    return new_decl;
 }
 
 auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
@@ -161,7 +259,22 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
         -> std::shared_ptr<ASTVarRef>
 {
     assert(name.category == Category::Identifier);
-    return std::make_shared<ASTVarRef>(name.lexeme, std::move(index));
+
+    auto decl = current_scope->lookup(name.lexeme);
+    if(!decl)
+    {
+        // TODO report that variable has not been found.
+        return nullptr;
+    }
+
+    auto var_decl = decl->as_var_decl();
+    if(!var_decl)
+    {
+        // TODO report this is not a variable.
+        return nullptr;
+    }
+
+    return std::make_shared<ASTVarRef>(std::move(var_decl), std::move(index));
 }
 
 auto Semantics::act_on_call(const Word& name,
@@ -169,7 +282,22 @@ auto Semantics::act_on_call(const Word& name,
         -> std::shared_ptr<ASTFunCall>
 {
     assert(name.category == Category::Identifier);
-    return std::make_shared<ASTFunCall>(name.lexeme, std::move(args));
+
+    auto decl = current_scope->lookup(name.lexeme);
+    if(!decl)
+    {
+        // TODO report that function has not been found.
+        return nullptr;
+    }
+
+    auto fun_decl = decl->as_fun_decl();
+    if(!fun_decl)
+    {
+        // TODO report this is not a function.
+        return nullptr;
+    }
+
+    return std::make_shared<ASTFunCall>(std::move(fun_decl), std::move(args));
 }
 
 auto Semantics::number_from_word(const Word& word) -> int32_t

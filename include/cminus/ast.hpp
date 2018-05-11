@@ -9,6 +9,8 @@ class ASTDecl;
 class ASTStmt;
 class ASTProgram;
 class ASTFunDecl;
+class ASTVarDecl;
+class ASTParmVarDecl;
 class ASTBinaryExpr;
 class ASTAssignExpr;
 class ASTNumber;
@@ -39,11 +41,31 @@ public:
             return true;
         return false;
     }
+
+    /// \returns a static pointer cast to T.
+    template<typename T>
+    auto cast() -> std::shared_ptr<T>
+    {
+        return std::static_pointer_cast<T>(shared_from_this());
+    }
+
+    /// \returns a static pointer cast to T.
+    template<typename T>
+    auto cast() const -> std::shared_ptr<const T>
+    {
+        return std::static_pointer_cast<T>(shared_from_this());
+    }
 };
 
 /// Base of any declaration node.
 class ASTDecl : public AST
 {
+public:
+    virtual auto as_fun_decl() -> std::shared_ptr<ASTFunDecl>
+    { return nullptr; }
+
+    virtual auto as_var_decl() -> std::shared_ptr<ASTVarDecl>
+    { return nullptr; }
 };
 
 // Base of any statement node.
@@ -85,7 +107,7 @@ public:
                         std::shared_ptr<ASTNumber> array_size) :
         ASTVarDecl(name, !!array_size, array_size)
     /* don't move array_size because of
-                                     * its use in !!array_size */
+    * its use in !!array_size */
     {
     }
 
@@ -97,6 +119,11 @@ public:
     }
 
     virtual void dump(std::string&, size_t depth);
+
+    virtual auto as_var_decl() -> std::shared_ptr<ASTVarDecl>
+    { return this->cast<ASTVarDecl>(); }
+
+    SourceRange get_name() { return name; }
 
 protected:
     SourceRange name;
@@ -120,11 +147,7 @@ public:
 class ASTFunDecl : public ASTDecl
 {
 public:
-    explicit ASTFunDecl(bool is_void_retn, SourceRange name,
-                        std::vector<std::shared_ptr<ASTParmVarDecl>> params,
-                        std::shared_ptr<ASTCompoundStmt> comp_stmt) :
-        comp_stmt(std::move(comp_stmt)),
-        params(std::move(params)),
+    explicit ASTFunDecl(bool is_void_retn, SourceRange name) :
         name(name),
         is_void_retn(is_void_retn)
     {
@@ -132,8 +155,19 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
+    virtual auto as_fun_decl() -> std::shared_ptr<ASTFunDecl>
+    { return this->cast<ASTFunDecl>(); }
+
+    SourceRange get_name() { return name; }
+
+    void set_body(std::shared_ptr<ASTCompoundStmt> comp_stmt)
+    { this->comp_stmt = std::move(comp_stmt); }
+
+    void add_param(std::shared_ptr<ASTParmVarDecl> parm)
+    { this->params.push_back(std::move(parm)); }
+
 private:
-    std::shared_ptr<ASTCompoundStmt> comp_stmt; //< never null
+    std::shared_ptr<ASTCompoundStmt> comp_stmt; //< may be null
     std::vector<std::shared_ptr<ASTParmVarDecl>> params;
     SourceRange name;
     bool is_void_retn;
@@ -158,20 +192,21 @@ private:
 class ASTVarRef : public ASTExpr
 {
 public:
-    explicit ASTVarRef(SourceRange varname) :
-        varname(varname)
+    explicit ASTVarRef(std::shared_ptr<ASTVarDecl> decl) :
+        decl(std::move(decl))
     {
     }
 
-    explicit ASTVarRef(SourceRange varname, std::shared_ptr<ASTExpr> expr) :
-        varname(varname), expr(expr)
+    explicit ASTVarRef(std::shared_ptr<ASTVarDecl> decl,
+                       std::shared_ptr<ASTExpr> expr) :
+        decl(std::move(decl)), expr(std::move(expr))
     {
     }
 
     virtual void dump(std::string&, size_t depth);
 
 private:
-    SourceRange varname;
+    std::shared_ptr<ASTVarDecl> decl;
     std::shared_ptr<ASTExpr> expr;
 };
 
@@ -308,9 +343,9 @@ private:
 class ASTFunCall : public ASTExpr
 {
 public:
-    explicit ASTFunCall(SourceRange funname,
+    explicit ASTFunCall(std::shared_ptr<ASTFunDecl> decl,
                         std::vector<std::shared_ptr<ASTExpr>> args) :
-        funname(funname),
+        decl(std::move(decl)),
         args(std::move(args))
     {
     }
@@ -318,7 +353,7 @@ public:
     virtual void dump(std::string&, size_t depth);
 
 private:
-    SourceRange funname;
+    std::shared_ptr<ASTFunDecl> decl;
     std::vector<std::shared_ptr<ASTExpr>> args;
 };
 }
