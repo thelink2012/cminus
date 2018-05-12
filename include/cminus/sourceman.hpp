@@ -2,9 +2,9 @@
 #include <cstdio>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string_view>
 #include <vector>
-#include <set>
 
 namespace cminus
 {

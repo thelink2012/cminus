@@ -84,5 +84,4 @@ auto SourceFile::make_source_range(std::string str) -> SourceRange
     auto [it, inserted] = this->vranges.emplace(std::move(str));
     return std::string_view(*it);
 }
-
 }

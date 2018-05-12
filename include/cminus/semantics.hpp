@@ -47,8 +47,7 @@ public:
     explicit Scope(ScopeFlags flags, std::unique_ptr<Scope> parent_a) :
         parent_scope(std::move(parent_a)), flags(flags)
     {
-        assert(!!(flags & ScopeFlags::FunScope) ? 
-                !!(flags & ScopeFlags::CompoundStmt) : true);
+        assert(!!(flags & ScopeFlags::FunScope) ? !!(flags & ScopeFlags::CompoundStmt) : true);
     }
 
     Scope(const Scope&) = delete;
@@ -63,12 +62,12 @@ public:
     auto lookup(SourceRange name) const -> std::shared_ptr<ASTDecl>;
 
     /// Performs a symbol lookup exclusively on this scope.
-    /// 
+    ///
     /// In other words, the lookup request is not propagated to the parent scope.
     auto lookup_exclusive(SourceRange name) const -> std::shared_ptr<ASTDecl>;
 
     /// Inserts a new symbol into this scope.
-    /// 
+    ///
     /// If this is a redeclaration, no changes are made to the symbol table.
     ///
     /// \returns a pair consisting of a pointer to the inserted symbol (or to the
@@ -188,7 +187,7 @@ protected:
     friend class ParseScope;
 
     /// Enters a new scope.
-    /// 
+    ///
     /// \note use `ParseScope` instead of this method.
     void enter_scope(ScopeFlags flags);
 
@@ -198,10 +197,10 @@ protected:
     void leave_scope();
 
 private:
-    auto make_builtin(Category retn_type, 
+    auto make_builtin(Category retn_type,
                       std::string name,
                       std::vector<std::string> params)
-        -> std::shared_ptr<ASTFunDecl>;
+            -> std::shared_ptr<ASTFunDecl>;
 
 private:
     SourceFile& source;

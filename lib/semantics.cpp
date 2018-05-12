@@ -65,14 +65,14 @@ Semantics::Semantics(SourceFile& source_a,
 {
     current_scope = std::make_unique<Scope>(ScopeFlags::TopLevel, nullptr);
 
-    fun_println = make_builtin(Category::Void, "println", { "value" });
+    fun_println = make_builtin(Category::Void, "println", {"value"});
     fun_input = make_builtin(Category::Int, "input", {});
 }
 
-auto Semantics::make_builtin(Category retn_type, 
-                              std::string name_a,
-                              std::vector<std::string> params)
-    -> std::shared_ptr<ASTFunDecl>
+auto Semantics::make_builtin(Category retn_type,
+                             std::string name_a,
+                             std::vector<std::string> params)
+        -> std::shared_ptr<ASTFunDecl>
 {
     assert(retn_type == Category::Void
            || retn_type == Category::Int);
@@ -125,12 +125,12 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
     {
         diagman.report(source, name.location(),
                        Diag::sema_redefinition, name.lexeme)
-            .range(name.lexeme);
+                .range(name.lexeme);
     }
 
     if(type.category == Category::Void)
     {
-        diagman.report(source, type.location(), Diag::var_cannot_be_void)
+        diagman.report(source, type.location(), Diag::sema_var_cannot_be_void)
                 .range(type.lexeme);
     }
 
@@ -153,10 +153,9 @@ auto Semantics::act_on_fun_decl_start(const Word& retn_type, const Word& name)
     {
         diagman.report(source, name.location(),
                        Diag::sema_redefinition, name.lexeme)
-            .range(name.lexeme);
+                .range(name.lexeme);
     }
 
-    // Return the new declaration regardless of failures.
     return new_decl;
 }
 
@@ -180,12 +179,12 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
     {
         diagman.report(source, name.location(),
                        Diag::sema_redefinition, name.lexeme)
-            .range(name.lexeme);
+                .range(name.lexeme);
     }
 
     if(type.category == Category::Void)
     {
-        diagman.report(source, type.location(), Diag::var_cannot_be_void)
+        diagman.report(source, type.location(), Diag::sema_var_cannot_be_void)
                 .range(type.lexeme);
     }
 
@@ -196,6 +195,7 @@ auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                               std::shared_ptr<ASTExpr> rhs)
         -> std::shared_ptr<ASTAssignExpr>
 {
+    // TODO type check lhs and rhs.
     return std::make_shared<ASTAssignExpr>(std::move(lhs), std::move(rhs));
 }
 
@@ -204,6 +204,7 @@ auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
                                    Category category)
         -> std::shared_ptr<ASTBinaryExpr>
 {
+    // TODO type check lhs and rhs.
     auto type = ASTBinaryExpr::type_from_category(category);
     return std::make_shared<ASTBinaryExpr>(std::move(lhs), std::move(rhs), type);
 }
@@ -226,6 +227,7 @@ auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
                                       std::shared_ptr<ASTStmt> stmt2)
         -> std::shared_ptr<ASTSelectionStmt>
 {
+    // TODO type check expr
     return std::make_shared<ASTSelectionStmt>(std::move(expr), std::move(stmt1), std::move(stmt2));
 }
 
@@ -233,12 +235,14 @@ auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
                                       std::shared_ptr<ASTStmt> stmt)
         -> std::shared_ptr<ASTIterationStmt>
 {
+    // TODO type check expr
     return std::make_shared<ASTIterationStmt>(std::move(expr), std::move(stmt));
 }
 
 auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
         -> std::shared_ptr<ASTReturnStmt>
 {
+    // TODO type check expr
     return std::make_shared<ASTReturnStmt>(std::move(expr));
 }
 
@@ -260,7 +264,7 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
     {
         diagman.report(source, name.location(),
                        Diag::sema_undeclared_identifier, name.lexeme)
-            .range(name.lexeme);
+                .range(name.lexeme);
         return nullptr;
     }
 
@@ -268,9 +272,11 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
     if(!var_decl)
     {
         diagman.report(source, name.location(), Diag::sema_var_is_not_var)
-            .range(name.lexeme);
+                .range(name.lexeme);
         return nullptr;
     }
+
+    // TODO type check index
 
     return std::make_shared<ASTVarRef>(std::move(var_decl), std::move(index));
 }
@@ -286,7 +292,7 @@ auto Semantics::act_on_call(const Word& name,
     {
         diagman.report(source, name.location(),
                        Diag::sema_undeclared_identifier, name.lexeme)
-            .range(name.lexeme);
+                .range(name.lexeme);
         return nullptr;
     }
 
@@ -294,9 +300,12 @@ auto Semantics::act_on_call(const Word& name,
     if(!fun_decl)
     {
         diagman.report(source, name.location(), Diag::sema_fun_is_not_fun)
-            .range(name.lexeme);
+                .range(name.lexeme);
         return nullptr;
     }
+
+    // TODO type check arguments with fun params.
+    // TODO match arg count with param count.
 
     return std::make_shared<ASTFunCall>(std::move(fun_decl), std::move(args));
 }

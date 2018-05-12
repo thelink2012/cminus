@@ -62,10 +62,14 @@ class ASTDecl : public AST
 {
 public:
     virtual auto as_fun_decl() -> std::shared_ptr<ASTFunDecl>
-    { return nullptr; }
+    {
+        return nullptr;
+    }
 
     virtual auto as_var_decl() -> std::shared_ptr<ASTVarDecl>
-    { return nullptr; }
+    {
+        return nullptr;
+    }
 };
 
 // Base of any statement node.
@@ -121,7 +125,9 @@ public:
     virtual void dump(std::string&, size_t depth);
 
     virtual auto as_var_decl() -> std::shared_ptr<ASTVarDecl>
-    { return this->cast<ASTVarDecl>(); }
+    {
+        return this->cast<ASTVarDecl>();
+    }
 
     SourceRange get_name() { return name; }
 
@@ -156,15 +162,21 @@ public:
     virtual void dump(std::string&, size_t depth);
 
     virtual auto as_fun_decl() -> std::shared_ptr<ASTFunDecl>
-    { return this->cast<ASTFunDecl>(); }
+    {
+        return this->cast<ASTFunDecl>();
+    }
 
     SourceRange get_name() { return name; }
 
     void set_body(std::shared_ptr<ASTCompoundStmt> comp_stmt)
-    { this->comp_stmt = std::move(comp_stmt); }
+    {
+        this->comp_stmt = std::move(comp_stmt);
+    }
 
     void add_param(std::shared_ptr<ASTParmVarDecl> parm)
-    { this->params.push_back(std::move(parm)); }
+    {
+        this->params.push_back(std::move(parm));
+    }
 
 private:
     std::shared_ptr<ASTCompoundStmt> comp_stmt; //< may be null
@@ -199,7 +211,8 @@ public:
 
     explicit ASTVarRef(std::shared_ptr<ASTVarDecl> decl,
                        std::shared_ptr<ASTExpr> expr) :
-        decl(std::move(decl)), expr(std::move(expr))
+        decl(std::move(decl)),
+        expr(std::move(expr))
     {
     }
 
