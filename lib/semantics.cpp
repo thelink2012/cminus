@@ -258,7 +258,9 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
     auto decl = current_scope->lookup(name.lexeme);
     if(!decl)
     {
-        // TODO report that variable has not been found.
+        diagman.report(source, name.location(),
+                       Diag::sema_undeclared_identifier, name.lexeme)
+            .range(name.lexeme);
         return nullptr;
     }
 
@@ -282,7 +284,9 @@ auto Semantics::act_on_call(const Word& name,
     auto decl = current_scope->lookup(name.lexeme);
     if(!decl)
     {
-        // TODO report that function has not been found.
+        diagman.report(source, name.location(),
+                       Diag::sema_undeclared_identifier, name.lexeme)
+            .range(name.lexeme);
         return nullptr;
     }
 
