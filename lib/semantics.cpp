@@ -275,7 +275,8 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
     auto var_decl = decl->as_var_decl();
     if(!var_decl)
     {
-        // TODO report this is not a variable.
+        diagman.report(source, name.location(), Diag::sema_var_is_not_var)
+            .range(name.lexeme);
         return nullptr;
     }
 
@@ -298,7 +299,8 @@ auto Semantics::act_on_call(const Word& name,
     auto fun_decl = decl->as_fun_decl();
     if(!fun_decl)
     {
-        // TODO report this is not a function.
+        diagman.report(source, name.location(), Diag::sema_fun_is_not_fun)
+            .range(name.lexeme);
         return nullptr;
     }
 

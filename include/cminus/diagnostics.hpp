@@ -26,6 +26,8 @@ enum class Diag
     parser_number_too_big,
 
     sema_redefinition, // %0 => SymbolName
+    sema_fun_is_not_a_fun,
+    sema_var_is_not_a_var,
 };
 
 /// Parameter for `Diag` printing.
