@@ -28,6 +28,7 @@ enum class Diag
     sema_redefinition, // %0 => SymbolName
     sema_fun_is_not_a_fun,
     sema_var_is_not_a_var,
+    sema_var_cannot_be_void,
 };
 
 /// Parameter for `Diag` printing.

@@ -118,8 +118,6 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
     assert(type.category == Category::Void || type.category == Category::Int);
     assert(name.category == Category::Identifier);
 
-    // TODO semantically a var decl cannot be void
-
     auto new_decl = std::make_shared<ASTVarDecl>(name.lexeme, std::move(array_size));
 
     auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
@@ -130,15 +128,12 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
             .range(name.lexeme);
     }
 
-    // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
     if(type.category == Category::Void)
     {
-        // TODO even the Diag:: code is wrong!!! TRASH ME OUT REALLY.
-        diagman.report(source, type.location(), Diag::parser_number_too_big)
+        diagman.report(source, type.location(), Diag::var_cannot_be_void)
                 .range(type.lexeme);
     }
 
-    // Return the new declaration regardless of failures.
     return new_decl;
 }
 
@@ -178,8 +173,6 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
     assert(type.category == Category::Void || type.category == Category::Int);
     assert(name.category == Category::Identifier);
 
-    // TODO cannot be void and stuff
-    
     auto new_decl = std::make_shared<ASTParmVarDecl>(name.lexeme, is_array);
 
     auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
@@ -190,15 +183,12 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
             .range(name.lexeme);
     }
 
-    // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
     if(type.category == Category::Void)
     {
-        // TODO even the Diag:: code is wrong!!! TRASH ME OUT REALLY.
-        diagman.report(source, type.location(), Diag::parser_number_too_big)
+        diagman.report(source, type.location(), Diag::var_cannot_be_void)
                 .range(type.lexeme);
     }
 
-    // Return the new declaration regardless of failures.
     return new_decl;
 }
 
