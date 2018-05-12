@@ -24,10 +24,12 @@ enum class Diag
     parser_expected_expression,
     parser_expected_statement,
     parser_number_too_big,
+
+    sema_redefinition, // %0 => SymbolName
 };
 
 /// Parameter for `Diag` printing.
-using DiagParam = std::variant<Category>;
+using DiagParam = std::variant<Category, SourceRange>;
 
 /// Diagnostic information.
 struct Diagnostic

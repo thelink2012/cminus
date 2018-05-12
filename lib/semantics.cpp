@@ -125,7 +125,9 @@ auto Semantics::act_on_var_decl(const Word& type, const Word& name,
     auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
     if(!inserted)
     {
-        // TODO this is a semantic error (redecl)
+        diagman.report(source, name.location(),
+                       Diag::sema_redefinition, name.lexeme)
+            .range(name.lexeme);
     }
 
     // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
@@ -154,7 +156,9 @@ auto Semantics::act_on_fun_decl_start(const Word& retn_type, const Word& name)
     auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
     if(!inserted)
     {
-        // TODO this is a semantic error (redecl)
+        diagman.report(source, name.location(),
+                       Diag::sema_redefinition, name.lexeme)
+            .range(name.lexeme);
     }
 
     // Return the new declaration regardless of failures.
@@ -181,9 +185,10 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
     auto [decl, inserted] = current_scope->insert(name.lexeme, new_decl);
     if(!inserted)
     {
-        // TODO this is a semantic error (redecl)
+        diagman.report(source, name.location(),
+                       Diag::sema_redefinition, name.lexeme)
+            .range(name.lexeme);
     }
-
 
     // TODO THIS IS A STUB STUB FOR PASSING TESTS, REMOVE IT
     if(type.category == Category::Void)
