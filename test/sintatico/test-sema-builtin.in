@@ -1,0 +1,5 @@
+void main(void)
+{
+    input();
+    println(10);
+}
