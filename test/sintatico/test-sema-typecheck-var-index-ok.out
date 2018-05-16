@@ -1,0 +1,11 @@
+[program 
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [var-declaration [int] [x] [10]]
+      [= [var [x] [1]] [1]]
+    ]
+  ]
+]

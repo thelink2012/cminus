@@ -326,7 +326,7 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
         return nullptr;
     }
 
-    if(index->is_void())
+    if(index && index->is_void())
     {
         // TODO diagman
         return nullptr;
