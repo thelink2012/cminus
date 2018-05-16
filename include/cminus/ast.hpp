@@ -80,6 +80,8 @@ class ASTStmt : public AST
 /// Base of any expression node.
 class ASTExpr : public ASTStmt
 {
+public:
+    virtual auto is_void() -> bool = 0;
 };
 
 /// Node that represents an entire program.
@@ -186,7 +188,7 @@ public:
         this->params.push_back(std::move(parm));
     }
 
-    auto is_void() -> bool
+    bool is_void()
     {
         return this->is_void_retn;
     }
@@ -214,6 +216,11 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
+    virtual bool is_void()
+    {
+        return false;
+    }
+
 private:
     int32_t value;
 };
@@ -235,6 +242,11 @@ public:
     }
 
     virtual void dump(std::string&, size_t depth);
+
+    virtual bool is_void()
+    {
+        return false;
+    }
 
 private:
     std::shared_ptr<ASTVarDecl> decl;
@@ -274,6 +286,11 @@ public:
 
     /// Converts an word category into a operation enumeration.
     static Operation type_from_category(Category category);
+
+    virtual bool is_void()
+    {
+        return false;
+    }
 
 private:
     std::shared_ptr<ASTExpr> left;
@@ -382,6 +399,11 @@ public:
     }
 
     virtual void dump(std::string&, size_t depth);
+
+    virtual bool is_void()
+    {
+        return this->decl->is_void();
+    }
 
 private:
     std::shared_ptr<ASTFunDecl> decl;

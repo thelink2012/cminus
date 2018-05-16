@@ -214,7 +214,11 @@ auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                               std::shared_ptr<ASTExpr> rhs)
         -> std::shared_ptr<ASTAssignExpr>
 {
-    // TODO type check lhs and rhs.
+    if(rhs->is_void())
+    {
+        // TODO diagman
+        return nullptr;
+    }
     return std::make_shared<ASTAssignExpr>(std::move(lhs), std::move(rhs));
 }
 
@@ -223,7 +227,11 @@ auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
                                    Category category)
         -> std::shared_ptr<ASTBinaryExpr>
 {
-    // TODO type check lhs and rhs.
+    if(lhs->is_void() || rhs->is_void())
+    {
+        // TODO diagman
+        return nullptr;
+    }
     auto type = ASTBinaryExpr::type_from_category(category);
     return std::make_shared<ASTBinaryExpr>(std::move(lhs), std::move(rhs), type);
 }
@@ -246,7 +254,11 @@ auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
                                       std::shared_ptr<ASTStmt> stmt2)
         -> std::shared_ptr<ASTSelectionStmt>
 {
-    // TODO type check expr
+    if(expr->is_void())
+    {
+        // TODO diagman
+        return nullptr;
+    }
     return std::make_shared<ASTSelectionStmt>(std::move(expr), std::move(stmt1), std::move(stmt2));
 }
 
@@ -254,14 +266,22 @@ auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
                                       std::shared_ptr<ASTStmt> stmt)
         -> std::shared_ptr<ASTIterationStmt>
 {
-    // TODO type check expr
+    if(expr->is_void())
+    {
+        // TODO diagman
+        return nullptr;
+    }
     return std::make_shared<ASTIterationStmt>(std::move(expr), std::move(stmt));
 }
 
 auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
         -> std::shared_ptr<ASTReturnStmt>
 {
-    // TODO type check expr
+    if(expr->is_void())
+    {
+        // TODO diaman
+        return nullptr;
+    }
     return std::make_shared<ASTReturnStmt>(std::move(expr));
 }
 
@@ -295,7 +315,11 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
         return nullptr;
     }
 
-    // TODO type check index
+    if(index->is_void())
+    {
+        // TODO diagman
+        return nullptr;
+    }
 
     return std::make_shared<ASTVarRef>(std::move(var_decl), std::move(index));
 }
@@ -323,7 +347,14 @@ auto Semantics::act_on_call(const Word& name,
         return nullptr;
     }
 
-    // TODO type check arguments with fun params.
+    for(auto& expr : args)
+    {
+        if(expr->is_void())
+        {
+            // TODO diagman
+            return nullptr;
+        }
+    }
     // TODO match arg count with param count.
 
     return std::make_shared<ASTFunCall>(std::move(fun_decl), std::move(args));
