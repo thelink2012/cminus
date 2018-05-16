@@ -373,6 +373,16 @@ auto Semantics::act_on_call(const Word& name,
         return nullptr;
     }
 
+    for(size_t i=0; i<args.size(); ++i)
+    {
+        auto param = fun_decl->get_param(i);
+        if(args[i]->is_array() != param->is_array())
+        {
+            // TODO diagman
+            return nullptr;
+        }
+    }
+
     return std::make_shared<ASTFunCall>(std::move(fun_decl), std::move(args));
 }
 

@@ -82,6 +82,8 @@ class ASTExpr : public ASTStmt
 {
 public:
     virtual auto is_void() -> bool = 0;
+
+    virtual auto is_array() -> bool = 0;
 };
 
 /// Node that represents an entire program.
@@ -125,10 +127,10 @@ public:
     {
     }
 
-    explicit ASTVarDecl(SourceRange name, bool is_array,
+    explicit ASTVarDecl(SourceRange name, bool is_array_,
                         std::shared_ptr<ASTNumber> array_size) :
         name(name),
-        array_size(std::move(array_size)), is_array(is_array)
+        array_size(std::move(array_size)), is_array_(is_array_)
     {
     }
 
@@ -141,18 +143,23 @@ public:
 
     SourceRange get_name() { return name; }
 
+    bool is_array()
+    {
+        return this->is_array_;
+    }
+
 protected:
     SourceRange name;
-    std::shared_ptr<ASTNumber> array_size; //< may be null, even if is_array=true
-    bool is_array;
+    std::shared_ptr<ASTNumber> array_size; //< may be null, even if is_array_=true
+    bool is_array_;
 };
 
 /// Node that represents a variable declaration in a function param list.
 class ASTParmVarDecl : public ASTVarDecl
 {
 public:
-    explicit ASTParmVarDecl(SourceRange name, bool is_array) :
-        ASTVarDecl(name, is_array, nullptr)
+    explicit ASTParmVarDecl(SourceRange name, bool is_array_) :
+        ASTVarDecl(name, is_array_, nullptr)
     {
     }
 
@@ -198,6 +205,11 @@ public:
         return this->params.size();
     }
 
+    auto get_param(size_t index) -> std::shared_ptr<ASTParmVarDecl>
+    {
+        return this->params[index];
+    }
+
 private:
     std::shared_ptr<ASTCompoundStmt> comp_stmt; //< may be null
     std::vector<std::shared_ptr<ASTParmVarDecl>> params;
@@ -217,6 +229,11 @@ public:
     virtual void dump(std::string&, size_t depth);
 
     virtual bool is_void()
+    {
+        return false;
+    }
+
+    virtual bool is_array()
     {
         return false;
     }
@@ -246,6 +263,11 @@ public:
     virtual bool is_void()
     {
         return false;
+    }
+
+    virtual bool is_array()
+    {
+        return this->decl->is_array();
     }
 
 private:
@@ -288,6 +310,11 @@ public:
     static Operation type_from_category(Category category);
 
     virtual bool is_void()
+    {
+        return false;
+    }
+
+    virtual bool is_array()
     {
         return false;
     }
@@ -403,6 +430,11 @@ public:
     virtual bool is_void()
     {
         return this->decl->is_void();
+    }
+
+    virtual bool is_array()
+    {
+        return false;
     }
 
 private:
