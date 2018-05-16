@@ -355,7 +355,12 @@ auto Semantics::act_on_call(const Word& name,
             return nullptr;
         }
     }
-    // TODO match arg count with param count.
+
+    if(args.size() != fun_decl->get_num_params())
+    {
+        // TODO diagman
+        return nullptr;
+    }
 
     return std::make_shared<ASTFunCall>(std::move(fun_decl), std::move(args));
 }
