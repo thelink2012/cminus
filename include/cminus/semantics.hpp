@@ -209,6 +209,8 @@ private:
 
     std::shared_ptr<ASTFunDecl> fun_println;
     std::shared_ptr<ASTFunDecl> fun_input;
+
+    bool is_current_fun_void = true;
 };
 
 /// This object retains the ownership of a semantic scope.

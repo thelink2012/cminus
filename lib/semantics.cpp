@@ -164,6 +164,7 @@ auto Semantics::act_on_fun_decl_start(const Word& retn_type, const Word& name)
     assert(name.category == Category::Identifier);
 
     auto is_void = (retn_type.category == Category::Void);
+    this->is_current_fun_void = is_void;
 
     auto new_decl = std::make_shared<ASTFunDecl>(is_void, name.lexeme);
 
@@ -181,6 +182,7 @@ auto Semantics::act_on_fun_decl_start(const Word& retn_type, const Word& name)
 auto Semantics::act_on_fun_decl_end(std::shared_ptr<ASTFunDecl> decl)
         -> std::shared_ptr<ASTFunDecl>
 {
+    this->is_current_fun_void = true;
     return decl;
 }
 
@@ -277,9 +279,18 @@ auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
 auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
         -> std::shared_ptr<ASTReturnStmt>
 {
-    if(expr->is_void())
+    if(expr)
     {
-        // TODO diaman
+        if((this->is_current_fun_void && !expr->is_void()) ||
+           (!this->is_current_fun_void && expr->is_void()))
+        {
+            // TODO diagman
+            return nullptr;
+        }
+    }
+    else if(!this->is_current_fun_void)
+    {
+        // TODO diagman
         return nullptr;
     }
     return std::make_shared<ASTReturnStmt>(std::move(expr));
