@@ -101,6 +101,25 @@ auto Semantics::act_on_program_start() -> std::shared_ptr<ASTProgram>
 auto Semantics::act_on_program_end(std::shared_ptr<ASTProgram> program)
         -> std::shared_ptr<ASTProgram>
 {
+    auto decl = program->get_last_decl();
+    if(!decl)
+    {
+        //TODO diagman
+        return nullptr;
+    }
+
+    auto fun_decl = decl->as_fun_decl();
+    if(!fun_decl)
+    {
+        //TODO diagman
+        return nullptr;
+    }
+    if(!fun_decl->is_void() || fun_decl->get_name()!="main" || fun_decl->get_num_params())
+    {
+        //TODO diagman
+        return nullptr;
+    }
+
     return program;
 }
 

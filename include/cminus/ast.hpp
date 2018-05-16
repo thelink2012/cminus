@@ -99,6 +99,14 @@ public:
         decls.push_back(std::move(decl));
     }
 
+    /// Get the last declaration.
+    auto get_last_decl() -> std::shared_ptr<ASTDecl>
+    {
+        if(!decls.size())
+            return nullptr;
+        return decls.back();
+    }
+
 private:
     std::vector<std::shared_ptr<ASTDecl>> decls;
 };
@@ -176,6 +184,16 @@ public:
     void add_param(std::shared_ptr<ASTParmVarDecl> parm)
     {
         this->params.push_back(std::move(parm));
+    }
+
+    auto is_void() -> bool
+    {
+        return this->is_void_retn;
+    }
+
+    auto get_num_params() -> size_t
+    {
+        return this->params.size();
     }
 
 private:
