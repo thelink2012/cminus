@@ -6,7 +6,7 @@
     [compound-stmt 
       [var-declaration [int] [x]]
       [var-declaration [int] [y]]
-      [var-declaration [int] [arr] [10]][var [x]][var [y]][var [arr]][var [arr] [1]][var [arr] [var [x]]][var [arr] 
+      [var-declaration [int] [arr] [10]][var [x]][var [y]][var [arr] [1]][var [arr] [var [x]]][var [arr] 
         [+ [var [x]] [2]]]
     ]
   ]

@@ -204,7 +204,7 @@ auto Parser::parse_expr_stmt() -> std::shared_ptr<ASTStmt>
     {
         if(!expect_and_consume(Category::Semicolon))
             return nullptr;
-        return expr;
+        return sema.act_on_expr_stmt(std::move(expr));
     }
     return nullptr;
 }

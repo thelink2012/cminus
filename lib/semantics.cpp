@@ -246,6 +246,17 @@ auto Semantics::act_on_null_stmt()
     return std::make_shared<ASTNullStmt>();
 }
 
+auto Semantics::act_on_expr_stmt(std::shared_ptr<ASTExpr> expr)
+    -> std::shared_ptr<ASTExpr>
+{
+    if(expr->type() == ExprType::Array)
+    {
+        // TODO diagman
+        return nullptr;
+    }
+    return expr;
+}
+
 auto Semantics::act_on_compound_stmt(std::vector<std::shared_ptr<ASTVarDecl>> decls,
                                      std::vector<std::shared_ptr<ASTStmt>> stms)
         -> std::shared_ptr<ASTCompoundStmt>
