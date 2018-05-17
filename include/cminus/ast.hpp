@@ -22,6 +22,13 @@ class ASTIterationStmt;
 class ASTReturnStmt;
 class ASTFunCall;
 
+enum class ExprType
+{
+    Array,
+    Int,
+    Void
+};
+
 /// Base of any AST node.
 class AST : public std::enable_shared_from_this<AST>
 {
@@ -81,9 +88,7 @@ class ASTStmt : public AST
 class ASTExpr : public ASTStmt
 {
 public:
-    virtual auto is_void() -> bool = 0;
-
-    virtual auto is_array() -> bool = 0;
+    virtual auto type() -> ExprType = 0;
 };
 
 /// Node that represents an entire program.
@@ -228,14 +233,9 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
-    virtual bool is_void()
+    virtual auto type() -> ExprType
     {
-        return false;
-    }
-
-    virtual bool is_array()
-    {
-        return false;
+        return ExprType::Int;
     }
 
 private:
@@ -260,14 +260,14 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
-    virtual bool is_void()
+    virtual auto type() -> ExprType
     {
-        return false;
-    }
-
-    virtual bool is_array()
-    {
-        return this->decl->is_array();
+        if(expr)
+            return ExprType::Int;
+        else if(this->decl->is_array())
+            return ExprType::Array;
+        else
+            return ExprType::Int;
     }
 
 private:
@@ -309,14 +309,9 @@ public:
     /// Converts an word category into a operation enumeration.
     static Operation type_from_category(Category category);
 
-    virtual bool is_void()
+    virtual auto type() -> ExprType
     {
-        return false;
-    }
-
-    virtual bool is_array()
-    {
-        return false;
+        return ExprType::Int;
     }
 
 private:
@@ -427,14 +422,12 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
-    virtual bool is_void()
+    virtual auto type() -> ExprType
     {
-        return this->decl->is_void();
-    }
-
-    virtual bool is_array()
-    {
-        return false;
+        if(this->decl->is_void())
+            return ExprType::Void;
+        else
+            return ExprType::Int;
     }
 
 private:

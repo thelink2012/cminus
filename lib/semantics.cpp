@@ -216,7 +216,8 @@ auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                               std::shared_ptr<ASTExpr> rhs)
         -> std::shared_ptr<ASTAssignExpr>
 {
-    if(rhs->is_void())
+    if(rhs->type() != ExprType::Int ||
+       lhs->type() != ExprType::Int)
     {
         // TODO diagman
         return nullptr;
@@ -229,7 +230,8 @@ auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
                                    Category category)
         -> std::shared_ptr<ASTBinaryExpr>
 {
-    if(lhs->is_void() || rhs->is_void())
+    if(lhs->type() != ExprType::Int ||
+       rhs->type() != ExprType::Int)
     {
         // TODO diagman
         return nullptr;
@@ -256,7 +258,7 @@ auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
                                       std::shared_ptr<ASTStmt> stmt2)
         -> std::shared_ptr<ASTSelectionStmt>
 {
-    if(expr->is_void())
+    if(expr->type() != ExprType::Int)
     {
         // TODO diagman
         return nullptr;
@@ -268,7 +270,7 @@ auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
                                       std::shared_ptr<ASTStmt> stmt)
         -> std::shared_ptr<ASTIterationStmt>
 {
-    if(expr->is_void())
+    if(expr->type() != ExprType::Int)
     {
         // TODO diagman
         return nullptr;
@@ -281,8 +283,10 @@ auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
 {
     if(expr)
     {
-        if((this->is_current_fun_void && !expr->is_void()) ||
-           (!this->is_current_fun_void && expr->is_void()))
+        bool is_void = (expr->type() == ExprType::Void);
+        bool is_int = (expr->type() == ExprType::Int);
+        if((this->is_current_fun_void && !is_void) ||
+           (!this->is_current_fun_void && !is_int))
         {
             // TODO diagman
             return nullptr;
@@ -326,7 +330,7 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
         return nullptr;
     }
 
-    if(index && index->is_void())
+    if(index && index->type() != ExprType::Int)
     {
         // TODO diagman
         return nullptr;
@@ -358,15 +362,6 @@ auto Semantics::act_on_call(const Word& name,
         return nullptr;
     }
 
-    for(auto& expr : args)
-    {
-        if(expr->is_void())
-        {
-            // TODO diagman
-            return nullptr;
-        }
-    }
-
     if(args.size() != fun_decl->get_num_params())
     {
         // TODO diagman
@@ -375,8 +370,16 @@ auto Semantics::act_on_call(const Word& name,
 
     for(size_t i=0; i<args.size(); ++i)
     {
+        bool is_void = (args[i]->type() == ExprType::Void);
+        if(is_void)
+        {
+            // TODO diagman
+            return nullptr;
+        }
+
         auto param = fun_decl->get_param(i);
-        if(args[i]->is_array() != param->is_array())
+        bool is_array = (args[i]->type() == ExprType::Array);
+        if(is_array != param->is_array())
         {
             // TODO diagman
             return nullptr;
