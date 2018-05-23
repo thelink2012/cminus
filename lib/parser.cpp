@@ -317,17 +317,18 @@ auto Parser::parse_iteration_stmt() -> std::shared_ptr<ASTIterationStmt>
 // <return-stmt> ::= return ; | return <expression> ;
 auto Parser::parse_return_stmt() -> std::shared_ptr<ASTReturnStmt>
 {
-    if(!expect_and_consume(Category::Return))
+    auto return_word = expect_and_consume(Category::Return);
+    if(!return_word)
         return nullptr;
 
     if(try_consume(Category::Semicolon))
-        return sema.act_on_return_stmt(nullptr);
+        return sema.act_on_return_stmt(nullptr, *return_word);
 
     if(auto expr = parse_expression())
     {
         if(!expect_and_consume(Category::Semicolon))
             return nullptr;
-        return sema.act_on_return_stmt(std::move(expr));
+        return sema.act_on_return_stmt(std::move(expr), *return_word);
     }
     return nullptr;
 }
@@ -347,12 +348,13 @@ auto Parser::parse_expression() -> std::shared_ptr<ASTExpr>
         // by an '=' token in the lookahead, it stops and derives the <var>.
         //
         // Our job is, then, to eat the '=' token and derive the assignment into <var>.
-        if(expr1->is<ASTVarRef>() && try_consume(Category::Assign))
+        std::optional<Word> op_word;
+        if(expr1->is<ASTVarRef>() && (op_word = try_consume(Category::Assign)))
         {
             if(auto expr2 = parse_expression())
             {
                 auto lvalue = std::static_pointer_cast<ASTVarRef>(expr1);
-                return sema.act_on_assign(std::move(lvalue), expr2);
+                return sema.act_on_assign(std::move(lvalue), expr2, *op_word);
             }
             else
             {
@@ -377,7 +379,7 @@ auto Parser::parse_simple_expression() -> std::shared_ptr<ASTExpr>
                                       Category::Equal, Category::NotEqual))
         {
             if(auto expr2 = parse_additive_expression())
-                return sema.act_on_binary_expr(expr1, expr2, op_word->category);
+                return sema.act_on_binary_expr(expr1, expr2, *op_word);
             else
                 return nullptr;
         }
@@ -397,7 +399,7 @@ auto Parser::parse_additive_expression() -> std::shared_ptr<ASTExpr>
         while(auto op_word = try_consume(Category::Plus, Category::Minus))
         {
             if(auto expr2 = parse_term())
-                expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
+                expr1 = sema.act_on_binary_expr(expr1, expr2, *op_word);
             else
                 return nullptr;
         }
@@ -415,7 +417,7 @@ auto Parser::parse_term() -> std::shared_ptr<ASTExpr>
         while(auto op_word = try_consume(Category::Multiply, Category::Divide))
         {
             if(auto expr2 = parse_factor())
-                expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
+                expr1 = sema.act_on_binary_expr(expr1, expr2, *op_word);
             else
                 return nullptr;
         }
@@ -537,10 +539,11 @@ auto Parser::parse_call() -> std::shared_ptr<ASTFunCall>
             return nullptr;
     }
 
-    if(!expect_and_consume(Category::CloseParen))
+    auto rparen = expect_and_consume(Category::CloseParen);
+    if(!rparen)
         return nullptr;
 
-    return sema.act_on_call(*id, std::move(args));
+    return sema.act_on_call(*id, std::move(args), rparen->location());
 }
 }
 

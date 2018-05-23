@@ -90,6 +90,12 @@ class ASTExpr : public ASTStmt
 {
 public:
     virtual auto type() const -> ExprType = 0;
+    virtual auto source_range() const -> SourceRange = 0;
+
+    auto location() const -> SourceLocation
+    {
+        return source_range().begin();
+    }
 };
 
 /// Node that represents an entire program.
@@ -217,8 +223,8 @@ private:
 class ASTNumber : public ASTExpr
 {
 public:
-    explicit ASTNumber(int32_t number) :
-        value(number)
+    explicit ASTNumber(int32_t number, SourceRange lexeme) :
+        loc(lexeme), value(number)
     {
     }
 
@@ -229,7 +235,13 @@ public:
         return ExprType::Int;
     }
 
+    virtual auto source_range() const -> SourceRange
+    {
+        return loc;
+    }
+
 private:
+    SourceRange loc;
     int32_t value;
 };
 
@@ -237,15 +249,12 @@ private:
 class ASTVarRef : public ASTExpr
 {
 public:
-    explicit ASTVarRef(std::shared_ptr<ASTVarDecl> decl) :
-        decl(std::move(decl))
-    {
-    }
-
     explicit ASTVarRef(std::shared_ptr<ASTVarDecl> decl,
-                       std::shared_ptr<ASTExpr> expr) :
+                       std::shared_ptr<ASTExpr> expr,
+                       SourceRange loc) :
         decl(std::move(decl)),
-        expr(std::move(expr))
+        expr(std::move(expr)),
+        loc(loc)
     {
     }
 
@@ -263,9 +272,15 @@ public:
             return ExprType::Int;
     }
 
+    virtual auto source_range() const -> SourceRange
+    {
+        return loc;
+    }
+
 private:
     std::shared_ptr<ASTVarDecl> decl;
     std::shared_ptr<ASTExpr> expr; //< subscript expression, may be null
+    SourceRange loc;
 };
 
 /// Node of a binary expression in the AST.
@@ -302,6 +317,13 @@ public:
     virtual auto type() const -> ExprType
     {
         return ExprType::Int;
+    }
+
+    virtual auto source_range() const -> SourceRange
+    {
+        auto left_loc = left->source_range().begin();
+        auto right_loc = right->source_range().end();
+        return SourceRange(left_loc, std::distance(left_loc, right_loc));
     }
 
     /// Converts an word category into a operation enumeration.
@@ -407,9 +429,11 @@ class ASTFunCall : public ASTExpr
 {
 public:
     explicit ASTFunCall(std::shared_ptr<ASTFunDecl> decl,
-                        std::vector<std::shared_ptr<ASTExpr>> args) :
+                        std::vector<std::shared_ptr<ASTExpr>> args,
+                        SourceRange loc) :
         decl(std::move(decl)),
-        args(std::move(args))
+        args(std::move(args)),
+        loc(loc)
     {
     }
 
@@ -423,8 +447,14 @@ public:
             return ExprType::Int;
     }
 
+    virtual auto source_range() const -> SourceRange
+    {
+        return loc;
+    }
+
 private:
     std::shared_ptr<ASTFunDecl> decl;
     std::vector<std::shared_ptr<ASTExpr>> args;
+    SourceRange loc;
 };
 }

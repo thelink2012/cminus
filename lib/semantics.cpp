@@ -104,20 +104,18 @@ auto Semantics::act_on_program_end(std::shared_ptr<ASTProgram> program)
     auto decl = program->get_last_decl();
     if(!decl)
     {
-        //TODO diagman
-        return nullptr;
+        diagman.report(source, Diag::sema_empty_program);
+        return program;
     }
 
     auto fun_decl = decl->as_fun_decl();
-    if(!fun_decl)
+    if(!fun_decl
+       || !fun_decl->is_void()
+       || fun_decl->get_name() != "main"
+       || fun_decl->get_num_params())
     {
-        //TODO diagman
-        return nullptr;
-    }
-    if(!fun_decl->is_void() || fun_decl->get_name() != "main" || fun_decl->get_num_params())
-    {
-        //TODO diagman
-        return nullptr;
+        diagman.report(source, Diag::sema_last_decl_not_main);
+        return program;
     }
 
     return program;
@@ -213,28 +211,31 @@ auto Semantics::act_on_param_decl(const Word& type, const Word& name,
 }
 
 auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
-                              std::shared_ptr<ASTExpr> rhs)
+                              std::shared_ptr<ASTExpr> rhs,
+                              const Word& op)
         -> std::shared_ptr<ASTAssignExpr>
 {
-    if(rhs->type() != ExprType::Int || lhs->type() != ExprType::Int)
+    if(lhs->type() != ExprType::Int || rhs->type() != ExprType::Int)
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, op.location(), Diag::sema_assignment_type_error)
+                .range(lhs->source_range())
+                .range(rhs->source_range());
     }
     return std::make_shared<ASTAssignExpr>(std::move(lhs), std::move(rhs));
 }
 
 auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
                                    std::shared_ptr<ASTExpr> rhs,
-                                   Category category)
+                                   const Word& op)
         -> std::shared_ptr<ASTBinaryExpr>
 {
     if(lhs->type() != ExprType::Int || rhs->type() != ExprType::Int)
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, op.location(), Diag::sema_binary_expr_type_error)
+                .range(lhs->source_range())
+                .range(rhs->source_range());
     }
-    auto type = ASTBinaryExpr::type_from_category(category);
+    auto type = ASTBinaryExpr::type_from_category(op.category);
     return std::make_shared<ASTBinaryExpr>(std::move(lhs), std::move(rhs), type);
 }
 
@@ -249,8 +250,8 @@ auto Semantics::act_on_expr_stmt(std::shared_ptr<ASTExpr> expr)
 {
     if(expr->type() == ExprType::Array)
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, expr->location(), Diag::sema_array_statement)
+                .range(expr->source_range());
     }
     return expr;
 }
@@ -269,10 +270,12 @@ auto Semantics::act_on_selection_stmt(std::shared_ptr<ASTExpr> expr,
 {
     if(expr->type() != ExprType::Int)
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, expr->location(), Diag::sema_expr_not_boolean)
+                .range(expr->source_range());
     }
-    return std::make_shared<ASTSelectionStmt>(std::move(expr), std::move(stmt1), std::move(stmt2));
+    return std::make_shared<ASTSelectionStmt>(std::move(expr),
+                                              std::move(stmt1),
+                                              std::move(stmt2));
 }
 
 auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
@@ -281,33 +284,34 @@ auto Semantics::act_on_iteration_stmt(std::shared_ptr<ASTExpr> expr,
 {
     if(expr->type() != ExprType::Int)
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, expr->location(), Diag::sema_expr_not_boolean)
+                .range(expr->source_range());
     }
     return std::make_shared<ASTIterationStmt>(std::move(expr), std::move(stmt));
 }
 
-auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
+auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr,
+                                   const Word& return_word)
         -> std::shared_ptr<ASTReturnStmt>
 {
     if(expr)
     {
         if(this->is_current_fun_void)
         {
-            // TODO diagman
-            return nullptr;
+            diagman.report(source, return_word.location(),
+                           Diag::sema_void_fun_returning_value)
+                    .range(expr->source_range());
         }
-
-        if(expr->type() != ExprType::Int)
+        else if(expr->type() != ExprType::Int)
         {
-            // TODO diagman
-            return nullptr;
+            diagman.report(source, expr->location(), Diag::sema_incompatible_return_type)
+                    .range(expr->source_range());
         }
     }
     else if(!this->is_current_fun_void)
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, return_word.location(),
+                       Diag::sema_int_fun_not_returning_value);
     }
     return std::make_shared<ASTReturnStmt>(std::move(expr));
 }
@@ -317,7 +321,7 @@ auto Semantics::act_on_number(const Word& word)
 {
     assert(word.category == Category::Number);
     auto number = number_from_word(word);
-    return std::make_shared<ASTNumber>(number);
+    return std::make_shared<ASTNumber>(number, word.lexeme);
 }
 
 auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
@@ -331,7 +335,7 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
         diagman.report(source, name.location(),
                        Diag::sema_undeclared_identifier, name.lexeme)
                 .range(name.lexeme);
-        return nullptr;
+        return nullptr; // TODO error recovery
     }
 
     auto var_decl = decl->as_var_decl();
@@ -339,26 +343,29 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
     {
         diagman.report(source, name.location(), Diag::sema_var_is_not_var)
                 .range(name.lexeme);
-        return nullptr;
+        return nullptr; // TODO error recovery
     }
 
     if(index && index->type() != ExprType::Int)
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, index->location(), Diag::sema_index_is_not_int)
+                .range(index->source_range());
     }
 
     if(index && !var_decl->is_array())
     {
-        // TODO diagman
-        return nullptr;
+        diagman.report(source, index->location(), Diag::sema_index_is_not_int)
+                .range(name.lexeme);
+        index = nullptr; // recover by ignoring the index
     }
 
-    return std::make_shared<ASTVarRef>(std::move(var_decl), std::move(index));
+    return std::make_shared<ASTVarRef>(std::move(var_decl), std::move(index),
+                                       name.lexeme);
 }
 
 auto Semantics::act_on_call(const Word& name,
-                            std::vector<std::shared_ptr<ASTExpr>> args)
+                            std::vector<std::shared_ptr<ASTExpr>> args,
+                            SourceLocation rparenloc)
         -> std::shared_ptr<ASTFunCall>
 {
     assert(name.category == Category::Identifier);
@@ -369,7 +376,7 @@ auto Semantics::act_on_call(const Word& name,
         diagman.report(source, name.location(),
                        Diag::sema_undeclared_identifier, name.lexeme)
                 .range(name.lexeme);
-        return nullptr;
+        return nullptr; // TODO error recovery
     }
 
     auto fun_decl = decl->as_fun_decl();
@@ -377,34 +384,59 @@ auto Semantics::act_on_call(const Word& name,
     {
         diagman.report(source, name.location(), Diag::sema_fun_is_not_fun)
                 .range(name.lexeme);
-        return nullptr;
+        return nullptr; // TODO error recovery
     }
 
-    if(args.size() != fun_decl->get_num_params())
+    for(size_t a = 0;; ++a)
     {
-        // TODO diagman
-        return nullptr;
+        if(a == args.size())
+        {
+            // We are over with arguments. So we should be over with
+            // parameters as well. Otherwise that is an error.
+            if(a != fun_decl->get_num_params())
+            {
+                diagman.report(source, name.location(),
+                               Diag::sema_arg_too_few_params)
+                        .range(name.lexeme);
+            }
+            break;
+        }
+        else if(a == fun_decl->get_num_params())
+        {
+            // We are over with parameters, but we aren't with arguments.
+            diagman.report(source, name.location(),
+                           Diag::sema_arg_too_many_params)
+                    .range(name.lexeme);
+            break;
+        }
+        else
+        {
+            // Still possible to match arguments and parameters.
+            auto& arg = args[a];
+            auto param = fun_decl->get_param(a);
+
+            if(arg->type() == ExprType::Void)
+            {
+                diagman.report(source, arg->location(),
+                               Diag::sema_arg_type_mismatch)
+                        .range(arg->source_range());
+                continue;
+            }
+
+            bool is_arg_array = (arg->type() == ExprType::Array);
+            if(is_arg_array != param->is_array())
+            {
+                diagman.report(source, arg->location(),
+                               Diag::sema_arg_type_mismatch)
+                        .range(arg->source_range());
+                continue;
+            }
+        }
     }
 
-    for(size_t i = 0; i < args.size(); ++i)
-    {
-        bool is_void = (args[i]->type() == ExprType::Void);
-        if(is_void)
-        {
-            // TODO diagman
-            return nullptr;
-        }
-
-        auto param = fun_decl->get_param(i);
-        bool is_array = (args[i]->type() == ExprType::Array);
-        if(is_array != param->is_array())
-        {
-            // TODO diagman
-            return nullptr;
-        }
-    }
-
-    return std::make_shared<ASTFunCall>(std::move(fun_decl), std::move(args));
+    auto range = SourceRange(name.lexeme.begin(),
+                             std::distance(name.lexeme.begin(), rparenloc));
+    return std::make_shared<ASTFunCall>(std::move(fun_decl), std::move(args), range);
 }
 
 auto Semantics::number_from_word(const Word& word) -> int32_t

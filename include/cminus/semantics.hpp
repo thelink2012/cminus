@@ -154,18 +154,20 @@ public:
     /// Acts on a return statement.
     ///
     /// The returned `expr` may be `nullptr` for no expression to return.
-    auto act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
+    auto act_on_return_stmt(std::shared_ptr<ASTExpr> expr,
+                            const Word& return_word)
             -> std::shared_ptr<ASTReturnStmt>;
 
     /// Acts on an assignment expression.
     auto act_on_assign(std::shared_ptr<ASTVarRef> lhs,
-                       std::shared_ptr<ASTExpr> rhs)
+                       std::shared_ptr<ASTExpr> rhs,
+                       const Word& op)
             -> std::shared_ptr<ASTAssignExpr>;
 
     /// Acts on a binary expression.
     auto act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
                             std::shared_ptr<ASTExpr> rhs,
-                            Category category)
+                            const Word& op)
             -> std::shared_ptr<ASTBinaryExpr>;
 
     /// Acts on a number.
@@ -178,7 +180,8 @@ public:
 
     /// Acts on a function call.
     auto act_on_call(const Word& name,
-                     std::vector<std::shared_ptr<ASTExpr>> args)
+                     std::vector<std::shared_ptr<ASTExpr>> args,
+                     SourceLocation rparenloc)
             -> std::shared_ptr<ASTFunCall>;
 
     /// Converts a word into a number.
