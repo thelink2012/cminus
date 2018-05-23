@@ -114,7 +114,7 @@ auto Semantics::act_on_program_end(std::shared_ptr<ASTProgram> program)
         //TODO diagman
         return nullptr;
     }
-    if(!fun_decl->is_void() || fun_decl->get_name()!="main" || fun_decl->get_num_params())
+    if(!fun_decl->is_void() || fun_decl->get_name() != "main" || fun_decl->get_num_params())
     {
         //TODO diagman
         return nullptr;
@@ -164,7 +164,6 @@ auto Semantics::act_on_fun_decl_start(const Word& retn_type, const Word& name)
     assert(name.category == Category::Identifier);
 
     auto is_void = (retn_type.category == Category::Void);
-    this->is_current_fun_void = is_void;
 
     auto new_decl = std::make_shared<ASTFunDecl>(is_void, name.lexeme);
 
@@ -176,6 +175,7 @@ auto Semantics::act_on_fun_decl_start(const Word& retn_type, const Word& name)
                 .range(name.lexeme);
     }
 
+    this->is_current_fun_void = is_void;
     return new_decl;
 }
 
@@ -216,8 +216,7 @@ auto Semantics::act_on_assign(std::shared_ptr<ASTVarRef> lhs,
                               std::shared_ptr<ASTExpr> rhs)
         -> std::shared_ptr<ASTAssignExpr>
 {
-    if(rhs->type() != ExprType::Int ||
-       lhs->type() != ExprType::Int)
+    if(rhs->type() != ExprType::Int || lhs->type() != ExprType::Int)
     {
         // TODO diagman
         return nullptr;
@@ -230,8 +229,7 @@ auto Semantics::act_on_binary_expr(std::shared_ptr<ASTExpr> lhs,
                                    Category category)
         -> std::shared_ptr<ASTBinaryExpr>
 {
-    if(lhs->type() != ExprType::Int ||
-       rhs->type() != ExprType::Int)
+    if(lhs->type() != ExprType::Int || rhs->type() != ExprType::Int)
     {
         // TODO diagman
         return nullptr;
@@ -247,7 +245,7 @@ auto Semantics::act_on_null_stmt()
 }
 
 auto Semantics::act_on_expr_stmt(std::shared_ptr<ASTExpr> expr)
-    -> std::shared_ptr<ASTExpr>
+        -> std::shared_ptr<ASTExpr>
 {
     if(expr->type() == ExprType::Array)
     {
@@ -350,6 +348,12 @@ auto Semantics::act_on_var(const Word& name, std::shared_ptr<ASTExpr> index)
         return nullptr;
     }
 
+    if(index && !var_decl->is_array())
+    {
+        // TODO diagman
+        return nullptr;
+    }
+
     return std::make_shared<ASTVarRef>(std::move(var_decl), std::move(index));
 }
 
@@ -382,7 +386,7 @@ auto Semantics::act_on_call(const Word& name,
         return nullptr;
     }
 
-    for(size_t i=0; i<args.size(); ++i)
+    for(size_t i = 0; i < args.size(); ++i)
     {
         bool is_void = (args[i]->type() == ExprType::Void);
         if(is_void)

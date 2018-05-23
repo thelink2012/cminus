@@ -22,11 +22,12 @@ class ASTIterationStmt;
 class ASTReturnStmt;
 class ASTFunCall;
 
+/// The typing of a expression.
 enum class ExprType
 {
-    Array,
+    Void,
     Int,
-    Void
+    Array,
 };
 
 /// Base of any AST node.
@@ -88,7 +89,7 @@ class ASTStmt : public AST
 class ASTExpr : public ASTStmt
 {
 public:
-    virtual auto type() -> ExprType = 0;
+    virtual auto type() const -> ExprType = 0;
 };
 
 /// Node that represents an entire program.
@@ -108,10 +109,10 @@ public:
         decls.push_back(std::move(decl));
     }
 
-    /// Get the last declaration.
-    auto get_last_decl() -> std::shared_ptr<ASTDecl>
+    /// Gets the last declaration in the program.
+    auto get_last_decl() const -> std::shared_ptr<ASTDecl>
     {
-        if(!decls.size())
+        if(decls.empty())
             return nullptr;
         return decls.back();
     }
@@ -127,8 +128,6 @@ public:
     explicit ASTVarDecl(SourceRange name,
                         std::shared_ptr<ASTNumber> array_size) :
         ASTVarDecl(name, !!array_size, array_size)
-    /* don't move array_size because of
-    * its use in !!array_size */
     {
     }
 
@@ -146,16 +145,14 @@ public:
         return this->cast<ASTVarDecl>();
     }
 
-    SourceRange get_name() { return name; }
+    SourceRange get_name() const { return name; }
 
-    bool is_array()
-    {
-        return this->is_array_;
-    }
+    bool is_array() const { return this->is_array_; }
 
 protected:
     SourceRange name;
     std::shared_ptr<ASTNumber> array_size; //< may be null, even if is_array_=true
+                                           //< e.g. for function params which are array
     bool is_array_;
 };
 
@@ -188,7 +185,16 @@ public:
         return this->cast<ASTFunDecl>();
     }
 
-    SourceRange get_name() { return name; }
+    SourceRange get_name() const { return name; }
+
+    bool is_void() const { return this->is_void_retn; }
+
+    size_t get_num_params() const { return this->params.size(); }
+
+    auto get_param(size_t index) -> std::shared_ptr<ASTParmVarDecl>
+    {
+        return this->params[index];
+    }
 
     void set_body(std::shared_ptr<ASTCompoundStmt> comp_stmt)
     {
@@ -198,21 +204,6 @@ public:
     void add_param(std::shared_ptr<ASTParmVarDecl> parm)
     {
         this->params.push_back(std::move(parm));
-    }
-
-    bool is_void()
-    {
-        return this->is_void_retn;
-    }
-
-    auto get_num_params() -> size_t
-    {
-        return this->params.size();
-    }
-
-    auto get_param(size_t index) -> std::shared_ptr<ASTParmVarDecl>
-    {
-        return this->params[index];
     }
 
 private:
@@ -233,7 +224,7 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
-    virtual auto type() -> ExprType
+    virtual auto type() const -> ExprType
     {
         return ExprType::Int;
     }
@@ -260,9 +251,11 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
-    virtual auto type() -> ExprType
+    virtual auto type() const -> ExprType
     {
         if(expr)
+            // The only atomic type is int.
+            // Thus every array subscript should evaluate to an integer.
             return ExprType::Int;
         else if(this->decl->is_array())
             return ExprType::Array;
@@ -272,7 +265,7 @@ public:
 
 private:
     std::shared_ptr<ASTVarDecl> decl;
-    std::shared_ptr<ASTExpr> expr;
+    std::shared_ptr<ASTExpr> expr; //< subscript expression, may be null
 };
 
 /// Node of a binary expression in the AST.
@@ -306,13 +299,13 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
-    /// Converts an word category into a operation enumeration.
-    static Operation type_from_category(Category category);
-
-    virtual auto type() -> ExprType
+    virtual auto type() const -> ExprType
     {
         return ExprType::Int;
     }
+
+    /// Converts an word category into a operation enumeration.
+    static Operation type_from_category(Category category);
 
 private:
     std::shared_ptr<ASTExpr> left;
@@ -334,13 +327,10 @@ public:
 class ASTNullStmt : public ASTStmt
 {
 public:
-    explicit ASTNullStmt()
-    {
-    }
-
     virtual void dump(std::string&, size_t depth);
 };
 
+// Node for a compound statement in the AST.
 class ASTCompoundStmt : public ASTStmt
 {
 public:
@@ -358,12 +348,13 @@ private:
     std::vector<std::shared_ptr<ASTStmt>> stms;
 };
 
+// Node for an if statement in the AST.
 class ASTSelectionStmt : public ASTStmt
 {
 public:
     explicit ASTSelectionStmt(std::shared_ptr<ASTExpr> expr,
                               std::shared_ptr<ASTStmt> stmt1,
-                              std::shared_ptr<ASTStmt> stmt2 = nullptr) :
+                              std::shared_ptr<ASTStmt> stmt2) :
         expr(std::move(expr)),
         stmt1(std::move(stmt1)),
         stmt2(std::move(stmt2))
@@ -375,9 +366,10 @@ public:
 private:
     std::shared_ptr<ASTExpr> expr;
     std::shared_ptr<ASTStmt> stmt1;
-    std::shared_ptr<ASTStmt> stmt2; //< may be null for no-else
+    std::shared_ptr<ASTStmt> stmt2; //< may be null
 };
 
+// Node for a while statement in the AST.
 class ASTIterationStmt : public ASTStmt
 {
 public:
@@ -395,10 +387,11 @@ private:
     std::shared_ptr<ASTStmt> stmt;
 };
 
+// Node for a return statement in the AST.
 class ASTReturnStmt : public ASTStmt
 {
 public:
-    explicit ASTReturnStmt(std::shared_ptr<ASTExpr> expr = nullptr) :
+    explicit ASTReturnStmt(std::shared_ptr<ASTExpr> expr) :
         expr(std::move(expr))
     {
     }
@@ -422,7 +415,7 @@ public:
 
     virtual void dump(std::string&, size_t depth);
 
-    virtual auto type() -> ExprType
+    virtual auto type() const -> ExprType
     {
         if(this->decl->is_void())
             return ExprType::Void;

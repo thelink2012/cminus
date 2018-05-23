@@ -131,7 +131,7 @@ public:
 
     /// Acts on a expr statement.
     auto act_on_expr_stmt(std::shared_ptr<ASTExpr> expr)
-	    -> std::shared_ptr<ASTExpr>;
+            -> std::shared_ptr<ASTExpr>;
 
     /// Acts on a compound statement.
     auto act_on_compound_stmt(std::vector<std::shared_ptr<ASTVarDecl>> decls,
