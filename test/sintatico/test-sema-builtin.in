@@ -1,5 +1,6 @@
 void main(void)
 {
-    input();
-    println(10);
+    int x;
+    x = input();
+    println(x);
 }

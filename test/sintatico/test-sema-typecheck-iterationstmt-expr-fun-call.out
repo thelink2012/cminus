@@ -1,14 +1,7 @@
 [program 
   [fun-declaration 
-    [void]
-    [foo]
-    [params]
-    [compound-stmt 
-    ]
-  ]
-  [fun-declaration 
     [int]
-    [bar]
+    [foo]
     [params]
     [compound-stmt 
       [return-stmt [1]]
@@ -19,6 +12,14 @@
     [main]
     [params]
     [compound-stmt 
+      [iteration-stmt 
+        [call
+          [foo]
+          [args]
+        ]
+        [compound-stmt 
+        ]
+      ]
     ]
   ]
 ]

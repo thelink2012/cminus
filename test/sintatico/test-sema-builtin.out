@@ -4,13 +4,15 @@
     [main]
     [params]
     [compound-stmt 
-      [call
-        [input]
-        [args]
-      ]
+      [var-declaration [int] [x]]
+      [= [var [x]] 
+        [call
+          [input]
+          [args]
+        ]]
       [call
         [println]
-        [args [10]]
+        [args [var [x]]]
       ]
     ]
   ]

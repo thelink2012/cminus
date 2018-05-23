@@ -294,10 +294,13 @@ auto Semantics::act_on_return_stmt(std::shared_ptr<ASTExpr> expr)
 {
     if(expr)
     {
-        bool is_void = (expr->type() == ExprType::Void);
-        bool is_int = (expr->type() == ExprType::Int);
-        if((this->is_current_fun_void && !is_void) ||
-           (!this->is_current_fun_void && !is_int))
+        if(this->is_current_fun_void)
+        {
+            // TODO diagman
+            return nullptr;
+        }
+
+        if(expr->type() != ExprType::Int)
         {
             // TODO diagman
             return nullptr;

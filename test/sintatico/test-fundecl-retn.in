@@ -4,7 +4,7 @@ void foo(void)
 
 int bar(void)
 {
-    /* TODO return */
+    return 1;
 }
 
 void main(void) {}

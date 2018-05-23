@@ -2,16 +2,10 @@
   [fun-declaration 
     [void]
     [foo]
-    [params]
+    [params 
+      [param [int] [a] [\[\]]]]
     [compound-stmt 
-    ]
-  ]
-  [fun-declaration 
-    [int]
-    [bar]
-    [params]
-    [compound-stmt 
-      [return-stmt [1]]
+      [= [var [a] [0]] [1]]
     ]
   ]
   [fun-declaration 
