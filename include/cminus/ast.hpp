@@ -106,7 +106,7 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
     /// Adds a new declaration into the program.
     void add_decl(std::shared_ptr<ASTDecl> decl)
@@ -144,9 +144,9 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
-    virtual auto as_var_decl() -> std::shared_ptr<ASTVarDecl>
+    auto as_var_decl() -> std::shared_ptr<ASTVarDecl> override
     {
         return this->cast<ASTVarDecl>();
     }
@@ -171,7 +171,7 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 };
 
 /// Node that represents a function declaration.
@@ -184,9 +184,9 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
-    virtual auto as_fun_decl() -> std::shared_ptr<ASTFunDecl>
+    auto as_fun_decl() -> std::shared_ptr<ASTFunDecl> override 
     {
         return this->cast<ASTFunDecl>();
     }
@@ -228,14 +228,14 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
-    virtual auto type() const -> ExprType
+    auto type() const -> ExprType override 
     {
         return ExprType::Int;
     }
 
-    virtual auto source_range() const -> SourceRange
+    auto source_range() const -> SourceRange override
     {
         return loc;
     }
@@ -258,9 +258,9 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
-    virtual auto type() const -> ExprType
+    auto type() const -> ExprType override 
     {
         if(expr)
             // The only atomic type is int.
@@ -272,7 +272,7 @@ public:
             return ExprType::Int;
     }
 
-    virtual auto source_range() const -> SourceRange
+    auto source_range() const -> SourceRange override 
     {
         return loc;
     }
@@ -312,14 +312,14 @@ public:
         assert(this->left != nullptr && this->right != nullptr);
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
-    virtual auto type() const -> ExprType
+    auto type() const -> ExprType override 
     {
         return ExprType::Int;
     }
 
-    virtual auto source_range() const -> SourceRange
+    auto source_range() const -> SourceRange override 
     {
         auto left_loc = left->source_range().begin();
         auto right_loc = right->source_range().end();
@@ -349,7 +349,7 @@ public:
 class ASTNullStmt : public ASTStmt
 {
 public:
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 };
 
 // Node for a compound statement in the AST.
@@ -363,7 +363,7 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
 private:
     std::vector<std::shared_ptr<ASTVarDecl>> decls;
@@ -383,7 +383,7 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
 private:
     std::shared_ptr<ASTExpr> expr;
@@ -402,7 +402,7 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
 private:
     std::shared_ptr<ASTExpr> expr;
@@ -418,7 +418,7 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
 private:
     std::shared_ptr<ASTExpr> expr; //< may be null
@@ -437,9 +437,9 @@ public:
     {
     }
 
-    virtual void dump(std::string&, size_t depth);
+    void dump(std::string&, size_t depth) override;
 
-    virtual auto type() const -> ExprType
+    auto type() const -> ExprType override 
     {
         if(this->decl->is_void())
             return ExprType::Void;
@@ -447,7 +447,7 @@ public:
             return ExprType::Int;
     }
 
-    virtual auto source_range() const -> SourceRange
+    auto source_range() const -> SourceRange override 
     {
         return loc;
     }

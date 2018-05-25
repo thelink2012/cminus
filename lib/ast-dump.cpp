@@ -208,7 +208,7 @@ void ASTBinaryExpr::dump(std::string& dest, size_t depth)
     dest += ']';
 }
 
-void ASTNumber::dump(std::string& dest, size_t depth)
+void ASTNumber::dump(std::string& dest, size_t)
 {
     dest += '[';
     dest += std::to_string(this->value);
