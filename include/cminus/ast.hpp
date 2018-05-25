@@ -4,24 +4,23 @@
 
 namespace cminus
 {
-class AST;
-class ASTExpr;
 class ASTDecl;
 class ASTStmt;
+class ASTExpr;
 class ASTProgram;
 class ASTFunDecl;
 class ASTVarDecl;
 class ASTParmVarDecl;
-class ASTBinaryExpr;
-class ASTAssignExpr;
 class ASTNumber;
 class ASTVarRef;
+class ASTFunCall;
+class ASTBinaryExpr;
+class ASTAssignExpr;
 class ASTNullStmt;
 class ASTCompoundStmt;
 class ASTSelectionStmt;
 class ASTIterationStmt;
 class ASTReturnStmt;
-class ASTFunCall;
 
 /// The typing of a expression.
 enum class ExprType
@@ -60,42 +59,12 @@ enum class ExprKind
     AssignExpr,
 };
 
-/// Base of any AST node.
-class AST : public std::enable_shared_from_this<AST>
-{
-public:
-    virtual ~AST() {}
-
-    /// \returns whether this node is of type T.
-    template<typename T>
-    bool is() const
-    {
-        // TODO use static information instead of RTTI.
-        // TODO think about hierarchy checking when static!?
-        if(dynamic_cast<std::add_pointer_t<const T>>(this))
-            return true;
-        return false;
-    }
-
-    /// \returns a static pointer cast to T.
-    template<typename T>
-    auto cast() -> std::shared_ptr<T>
-    {
-        return std::static_pointer_cast<T>(shared_from_this());
-    }
-
-    /// \returns a static pointer cast to T.
-    template<typename T>
-    auto cast() const -> std::shared_ptr<const T>
-    {
-        return std::static_pointer_cast<T>(shared_from_this());
-    }
-};
-
 /// Base of any declaration node.
-class ASTDecl : public AST
+class ASTDecl : public std::enable_shared_from_this<ASTDecl>
 {
 public:
+    virtual ~ASTDecl() {}
+
     virtual auto decl_kind() const -> DeclKind = 0;
 
     virtual auto as_fun_decl() -> std::shared_ptr<ASTFunDecl>
@@ -112,12 +81,21 @@ public:
     {
         return nullptr;
     }
+
+protected:
+    template<typename T>
+    auto cast() -> std::shared_ptr<T>
+    {
+        return std::static_pointer_cast<T>(shared_from_this());
+    }
 };
 
 // Base of any statement node.
-class ASTStmt : public AST
+class ASTStmt : public std::enable_shared_from_this<ASTStmt>
 {
 public:
+    virtual ~ASTStmt() {}
+
     virtual auto stmt_kind() const -> StmtKind = 0;
 
     virtual auto as_null_stmt() -> std::shared_ptr<ASTNullStmt>
@@ -154,12 +132,21 @@ public:
     {
         return as_expr_stmt();
     }
+
+protected:
+    template<typename T>
+    auto cast() -> std::shared_ptr<T>
+    {
+        return std::static_pointer_cast<T>(shared_from_this());
+    }
 };
 
 /// Base of any expression node.
 class ASTExpr : public ASTStmt
 {
 public:
+    virtual ~ASTExpr() {}
+
     virtual auto expr_kind() const -> ExprKind = 0;
 
     virtual auto as_number_expr() -> std::shared_ptr<ASTNumber>
@@ -203,22 +190,21 @@ public:
 };
 
 /// Node that represents an entire program.
-class ASTProgram : public AST
+class ASTProgram : std::enable_shared_from_this<ASTProgram>
 {
 public:
     explicit ASTProgram()
     {
     }
 
-    /// Adds a new declaration into the program.
+    auto decl_begin() { return decls.begin(); }
+    auto decl_end() { return decls.end(); }
+
     void add_decl(std::shared_ptr<ASTDecl> decl)
     {
         assert(decl != nullptr);
         decls.push_back(std::move(decl));
     }
-
-    auto decl_begin() { return decls.begin(); }
-    auto decl_end() { return decls.end(); }
 
 private:
     std::vector<std::shared_ptr<ASTDecl>> decls;

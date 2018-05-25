@@ -349,17 +349,13 @@ auto Parser::parse_expression() -> std::shared_ptr<ASTExpr>
         //
         // Our job is, then, to eat the '=' token and derive the assignment into <var>.
         std::optional<Word> op_word;
-        if(expr1->is<ASTVarRef>() && (op_word = try_consume(Category::Assign)))
+        std::shared_ptr<ASTVarRef> lvalue;
+        if((lvalue = expr1->as_var_expr()) && (op_word = try_consume(Category::Assign)))
         {
             if(auto expr2 = parse_expression())
-            {
-                auto lvalue = std::static_pointer_cast<ASTVarRef>(expr1);
                 return sema.act_on_assign(std::move(lvalue), expr2, *op_word);
-            }
             else
-            {
                 return nullptr;
-            }
         }
         return expr1;
     }
