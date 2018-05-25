@@ -30,6 +30,35 @@ enum class ExprType
     Array,
 };
 
+/// The subclass of a declaration.
+enum class DeclKind
+{
+    VarDecl,
+    ParmVarDecl,
+    FunDecl,
+};
+
+/// The subclass of a statement.
+enum class StmtKind
+{
+    NullStmt,
+    ExprStmt,
+    CompoundStmt,
+    SelectionStmt,
+    IterationStmt,
+    ReturnStmt,
+};
+
+/// The subclass of a expression.
+enum class ExprKind
+{
+    Number,
+    VarRef,
+    FunCall,
+    BinaryExpr,
+    AssignExpr,
+};
+
 /// Base of any AST node.
 class AST : public std::enable_shared_from_this<AST>
 {
@@ -69,6 +98,8 @@ public:
 class ASTDecl : public AST
 {
 public:
+    virtual auto decl_kind() const -> DeclKind = 0;
+
     virtual auto as_fun_decl() -> std::shared_ptr<ASTFunDecl>
     {
         return nullptr;
@@ -78,23 +109,98 @@ public:
     {
         return nullptr;
     }
+
+    virtual auto as_parm_var_decl() -> std::shared_ptr<ASTParmVarDecl>
+    {
+        return nullptr;
+    }
 };
 
 // Base of any statement node.
 class ASTStmt : public AST
 {
+public:
+    virtual auto stmt_kind() const -> StmtKind = 0;
+
+    virtual auto as_null_stmt() -> std::shared_ptr<ASTNullStmt>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_expr_stmt() -> std::shared_ptr<ASTExpr>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_compound_stmt() -> std::shared_ptr<ASTCompoundStmt>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_selection_stmt() -> std::shared_ptr<ASTSelectionStmt>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_iteration_stmt() -> std::shared_ptr<ASTIterationStmt>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_return_stmt() -> std::shared_ptr<ASTReturnStmt>
+    {
+        return nullptr;
+    }
+
+    auto as_expr() -> std::shared_ptr<ASTExpr>
+    {
+        return as_expr_stmt();
+    }
 };
 
 /// Base of any expression node.
 class ASTExpr : public ASTStmt
 {
 public:
+    virtual auto expr_kind() const -> ExprKind = 0;
+
+    virtual auto as_number_expr() -> std::shared_ptr<ASTNumber>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_var_expr() -> std::shared_ptr<ASTVarRef>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_call_expr() -> std::shared_ptr<ASTFunCall>
+    {
+        return nullptr;
+    }
+
+    virtual auto as_binary_expr() -> std::shared_ptr<ASTBinaryExpr>
+    {
+        return nullptr;
+    }
+
     virtual auto type() const -> ExprType = 0;
+
     virtual auto source_range() const -> SourceRange = 0;
 
     auto location() const -> SourceLocation
     {
         return source_range().begin();
+    }
+
+    auto stmt_kind() const -> StmtKind override
+    {
+        return StmtKind::ExprStmt;
+    }
+
+    auto as_expr_stmt() -> std::shared_ptr<ASTExpr> override
+    {
+        return this->cast<ASTExpr>();
     }
 };
 
@@ -115,13 +221,8 @@ public:
         decls.push_back(std::move(decl));
     }
 
-    /// Gets the last declaration in the program.
-    auto get_last_decl() const -> std::shared_ptr<ASTDecl>
-    {
-        if(decls.empty())
-            return nullptr;
-        return decls.back();
-    }
+    auto decl_begin() { return decls.begin(); }
+    auto decl_end() { return decls.end(); }
 
 private:
     std::vector<std::shared_ptr<ASTDecl>> decls;
@@ -146,14 +247,26 @@ public:
 
     void dump(std::string&, size_t depth) override;
 
+    auto decl_kind() const -> DeclKind override
+    {
+        return DeclKind::VarDecl;
+    }
+
     auto as_var_decl() -> std::shared_ptr<ASTVarDecl> override
     {
         return this->cast<ASTVarDecl>();
     }
 
+    auto type() const -> ExprType
+    {
+        return is_array() ? ExprType::Array : ExprType::Int;
+    }
+
     SourceRange get_name() const { return name; }
 
     bool is_array() const { return this->is_array_; }
+
+    auto get_array_size() const -> std::shared_ptr<ASTNumber> { return array_size; }
 
 protected:
     SourceRange name;
@@ -172,6 +285,16 @@ public:
     }
 
     void dump(std::string&, size_t depth) override;
+
+    auto decl_kind() const -> DeclKind override
+    {
+        return DeclKind::ParmVarDecl;
+    }
+
+    auto as_parm_var_decl() -> std::shared_ptr<ASTParmVarDecl> override
+    {
+        return this->cast<ASTParmVarDecl>();
+    }
 };
 
 /// Node that represents a function declaration.
@@ -184,14 +307,24 @@ public:
     {
     }
 
+    auto parm_begin() { return params.begin(); }
+    auto parm_end() { return params.end(); }
+
     void dump(std::string&, size_t depth) override;
 
-    auto as_fun_decl() -> std::shared_ptr<ASTFunDecl> override 
+    auto decl_kind() const -> DeclKind override
+    {
+        return DeclKind::FunDecl;
+    }
+
+    auto as_fun_decl() -> std::shared_ptr<ASTFunDecl> override
     {
         return this->cast<ASTFunDecl>();
     }
 
     SourceRange get_name() const { return name; }
+
+    auto type() const { return is_void() ? ExprType::Void : ExprType::Int; }
 
     bool is_void() const { return this->is_void_retn; }
 
@@ -205,6 +338,12 @@ public:
     void set_body(std::shared_ptr<ASTCompoundStmt> comp_stmt)
     {
         this->comp_stmt = std::move(comp_stmt);
+    }
+
+    /// \returns the function body or `nullptr` if none.
+    auto get_body() -> std::shared_ptr<ASTCompoundStmt>
+    {
+        return this->comp_stmt;
     }
 
     void add_param(std::shared_ptr<ASTParmVarDecl> parm)
@@ -230,7 +369,17 @@ public:
 
     void dump(std::string&, size_t depth) override;
 
-    auto type() const -> ExprType override 
+    auto expr_kind() const -> ExprKind override
+    {
+        return ExprKind::Number;
+    }
+
+    auto as_number_expr() -> std::shared_ptr<ASTNumber> override
+    {
+        return this->cast<ASTNumber>();
+    }
+
+    auto type() const -> ExprType override
     {
         return ExprType::Int;
     }
@@ -260,11 +409,9 @@ public:
 
     void dump(std::string&, size_t depth) override;
 
-    auto type() const -> ExprType override 
+    auto type() const -> ExprType override
     {
         if(expr)
-            // The only atomic type is int.
-            // Thus every array subscript should evaluate to an integer.
             return ExprType::Int;
         else if(this->decl->is_array())
             return ExprType::Array;
@@ -272,7 +419,28 @@ public:
             return ExprType::Int;
     }
 
-    auto source_range() const -> SourceRange override 
+    auto get_decl() -> std::shared_ptr<ASTVarDecl>
+    {
+        return decl;
+    }
+
+    /// \returns the subscript expression or `nullptr` if none.
+    auto get_index() -> std::shared_ptr<ASTExpr>
+    {
+        return expr;
+    }
+
+    auto expr_kind() const -> ExprKind override
+    {
+        return ExprKind::VarRef;
+    }
+
+    auto as_var_expr() -> std::shared_ptr<ASTVarRef> override
+    {
+        return this->cast<ASTVarRef>();
+    }
+
+    auto source_range() const -> SourceRange override
     {
         return loc;
     }
@@ -280,6 +448,58 @@ public:
 private:
     std::shared_ptr<ASTVarDecl> decl;
     std::shared_ptr<ASTExpr> expr; //< subscript expression, may be null
+    SourceRange loc;
+};
+
+/// Node of a function call in the AST.
+class ASTFunCall : public ASTExpr
+{
+public:
+    explicit ASTFunCall(std::shared_ptr<ASTFunDecl> decl,
+                        std::vector<std::shared_ptr<ASTExpr>> args,
+                        SourceRange loc) :
+        decl(std::move(decl)),
+        args(std::move(args)),
+        loc(loc)
+    {
+    }
+
+    auto arg_begin() { return args.begin(); }
+    auto arg_end() { return args.end(); }
+
+    void dump(std::string&, size_t depth) override;
+
+    auto type() const -> ExprType override
+    {
+        if(this->decl->is_void())
+            return ExprType::Void;
+        else
+            return ExprType::Int;
+    }
+
+    auto get_decl() -> std::shared_ptr<ASTFunDecl>
+    {
+        return decl;
+    }
+
+    auto expr_kind() const -> ExprKind override
+    {
+        return ExprKind::FunCall;
+    }
+
+    auto as_call_expr() -> std::shared_ptr<ASTFunCall> override
+    {
+        return this->cast<ASTFunCall>();
+    }
+
+    auto source_range() const -> SourceRange override
+    {
+        return loc;
+    }
+
+private:
+    std::shared_ptr<ASTFunDecl> decl;
+    std::vector<std::shared_ptr<ASTExpr>> args;
     SourceRange loc;
 };
 
@@ -314,12 +534,25 @@ public:
 
     void dump(std::string&, size_t depth) override;
 
-    auto type() const -> ExprType override 
+    auto type() const -> ExprType override
     {
         return ExprType::Int;
     }
 
-    auto source_range() const -> SourceRange override 
+    auto get_left() -> std::shared_ptr<ASTExpr> { return left; }
+    auto get_right() -> std::shared_ptr<ASTExpr> { return right; }
+
+    auto expr_kind() const -> ExprKind override
+    {
+        return ExprKind::BinaryExpr;
+    }
+
+    auto as_binary_expr() -> std::shared_ptr<ASTBinaryExpr> override
+    {
+        return this->cast<ASTBinaryExpr>();
+    }
+
+    auto source_range() const -> SourceRange override
     {
         auto left_loc = left->source_range().begin();
         auto right_loc = right->source_range().end();
@@ -344,12 +577,28 @@ public:
         ASTBinaryExpr(std::move(left), std::move(right), Operation::Assign)
     {
     }
+
+    auto expr_kind() const -> ExprKind override
+    {
+        return ExprKind::AssignExpr;
+    }
 };
 
+/// Node for an empty statement in the AST.
 class ASTNullStmt : public ASTStmt
 {
 public:
     void dump(std::string&, size_t depth) override;
+
+    auto stmt_kind() const -> StmtKind override
+    {
+        return StmtKind::NullStmt;
+    }
+
+    auto as_null_stmt() -> std::shared_ptr<ASTNullStmt> override
+    {
+        return this->cast<ASTNullStmt>();
+    }
 };
 
 // Node for a compound statement in the AST.
@@ -364,6 +613,22 @@ public:
     }
 
     void dump(std::string&, size_t depth) override;
+
+    auto decl_begin() { return decls.begin(); }
+    auto decl_end() { return decls.end(); }
+
+    auto stmt_begin() { return stms.begin(); }
+    auto stmt_end() { return stms.end(); }
+
+    auto stmt_kind() const -> StmtKind override
+    {
+        return StmtKind::CompoundStmt;
+    }
+
+    auto as_compound_stmt() -> std::shared_ptr<ASTCompoundStmt> override
+    {
+        return this->cast<ASTCompoundStmt>();
+    }
 
 private:
     std::vector<std::shared_ptr<ASTVarDecl>> decls;
@@ -385,6 +650,20 @@ public:
 
     void dump(std::string&, size_t depth) override;
 
+    auto get_cond() -> std::shared_ptr<ASTExpr> { return expr; }
+    auto get_then() -> std::shared_ptr<ASTStmt> { return stmt1; }
+    auto get_else() -> std::shared_ptr<ASTStmt> { return stmt2; }
+
+    auto stmt_kind() const -> StmtKind override
+    {
+        return StmtKind::SelectionStmt;
+    }
+
+    auto as_selection_stmt() -> std::shared_ptr<ASTSelectionStmt> override
+    {
+        return this->cast<ASTSelectionStmt>();
+    }
+
 private:
     std::shared_ptr<ASTExpr> expr;
     std::shared_ptr<ASTStmt> stmt1;
@@ -404,6 +683,19 @@ public:
 
     void dump(std::string&, size_t depth) override;
 
+    auto get_cond() -> std::shared_ptr<ASTExpr> { return expr; }
+    auto get_body() -> std::shared_ptr<ASTStmt> { return stmt; }
+
+    auto stmt_kind() const -> StmtKind override
+    {
+        return StmtKind::IterationStmt;
+    }
+
+    auto as_iteration_stmt() -> std::shared_ptr<ASTIterationStmt> override
+    {
+        return this->cast<ASTIterationStmt>();
+    }
+
 private:
     std::shared_ptr<ASTExpr> expr;
     std::shared_ptr<ASTStmt> stmt;
@@ -420,41 +712,20 @@ public:
 
     void dump(std::string&, size_t depth) override;
 
+    /// \returns the return expression or `nullptr` if none.
+    auto get_expr() -> std::shared_ptr<ASTExpr> { return expr; }
+
+    auto stmt_kind() const -> StmtKind override
+    {
+        return StmtKind::ReturnStmt;
+    }
+
+    auto as_return_stmt() -> std::shared_ptr<ASTReturnStmt> override
+    {
+        return this->cast<ASTReturnStmt>();
+    }
+
 private:
     std::shared_ptr<ASTExpr> expr; //< may be null
-};
-
-/// Node of a function call in the AST.
-class ASTFunCall : public ASTExpr
-{
-public:
-    explicit ASTFunCall(std::shared_ptr<ASTFunDecl> decl,
-                        std::vector<std::shared_ptr<ASTExpr>> args,
-                        SourceRange loc) :
-        decl(std::move(decl)),
-        args(std::move(args)),
-        loc(loc)
-    {
-    }
-
-    void dump(std::string&, size_t depth) override;
-
-    auto type() const -> ExprType override 
-    {
-        if(this->decl->is_void())
-            return ExprType::Void;
-        else
-            return ExprType::Int;
-    }
-
-    auto source_range() const -> SourceRange override 
-    {
-        return loc;
-    }
-
-private:
-    std::shared_ptr<ASTFunDecl> decl;
-    std::vector<std::shared_ptr<ASTExpr>> args;
-    SourceRange loc;
 };
 }

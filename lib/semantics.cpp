@@ -101,13 +101,13 @@ auto Semantics::act_on_program_start() -> std::shared_ptr<ASTProgram>
 auto Semantics::act_on_program_end(std::shared_ptr<ASTProgram> program)
         -> std::shared_ptr<ASTProgram>
 {
-    auto decl = program->get_last_decl();
-    if(!decl)
+    if(program->decl_begin() == program->decl_end())
     {
         diagman.report(source, Diag::sema_empty_program);
         return program;
     }
 
+    auto decl = *std::prev(program->decl_end());
     auto fun_decl = decl->as_fun_decl();
     if(!fun_decl
        || !fun_decl->is_void()
