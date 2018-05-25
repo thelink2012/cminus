@@ -38,6 +38,20 @@ public:
     virtual void visit_type(ExprType type) { walk_type(type); }
     virtual void visit_name(SourceRange name) { walk_name(name); }
 
+    // These methods shall not be overriden! They would cause the visitation of
+    // a node to happen more than once. For instance, the statement `1;` would
+    // perform the following sequence of calls `visit_stmt => visit_expr_stmt
+    //  => visit_expr => visit_number_expr` all of which processes the same
+    // node (an `ASTNumber`) using a different super class.
+    //
+    // They are still provided as public because they can be helpful to dispatch
+    // the visitation of a superclass into a derived class visitation (e.g. call
+    // `visit_stmt` in order to reach `visit_iteration_stmt`).
+    void visit_decl(ASTDecl& decl) { walk_decl(decl); }
+    void visit_stmt(ASTStmt& stmt) { walk_stmt(stmt); }
+    void visit_expr_stmt(ASTExpr& stmt) { walk_expr_stmt(stmt); }
+    void visit_expr(ASTExpr& expr) { walk_expr(expr); }
+
 public:
     void walk_program(ASTProgram& program);
 
@@ -60,22 +74,10 @@ public:
     void walk_name(SourceRange);
 
 private:
-    // These methods shall not be visible to the client because they would
-    // cause the visitation of a node to happen more than once. For instance,
-    // the statement `1;` would perform the following sequence of calls
-    // `visit_stmt => visit_expr_stmt => visit_expr => visit_number_expr` all
-    // of which processes the same node (an `ASTNumber`) using a different
-    // super class.
-
+    // This is private because their visitor equivalent cannot be overriden.
     void walk_decl(ASTDecl& decl);
-    virtual void visit_decl(ASTDecl& decl) { walk_decl(decl); }
-
     void walk_stmt(ASTStmt& stmt);
     void walk_expr_stmt(ASTStmt& stmt) { visit_expr(*stmt.as_expr()); }
-    virtual void visit_stmt(ASTStmt& stmt) { walk_stmt(stmt); }
-    virtual void visit_expr_stmt(ASTExpr& stmt) { walk_expr_stmt(stmt); }
-
     void walk_expr(ASTExpr& expr);
-    virtual void visit_expr(ASTExpr& expr) { walk_expr(expr); }
 };
 }

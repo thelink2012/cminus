@@ -1,3 +1,4 @@
+#pragma once
 #include <cminus/scanner.hpp>
 #include <memory>
 
@@ -64,9 +65,6 @@ class AST : public std::enable_shared_from_this<AST>
 {
 public:
     virtual ~AST() {}
-
-    /// Dumps the node in labeled bracket notation.
-    virtual void dump(std::string&, size_t depth) = 0;
 
     /// \returns whether this node is of type T.
     template<typename T>
@@ -212,8 +210,6 @@ public:
     {
     }
 
-    void dump(std::string&, size_t depth) override;
-
     /// Adds a new declaration into the program.
     void add_decl(std::shared_ptr<ASTDecl> decl)
     {
@@ -244,8 +240,6 @@ public:
         array_size(std::move(array_size)), is_array_(is_array_)
     {
     }
-
-    void dump(std::string&, size_t depth) override;
 
     auto decl_kind() const -> DeclKind override
     {
@@ -284,8 +278,6 @@ public:
     {
     }
 
-    void dump(std::string&, size_t depth) override;
-
     auto decl_kind() const -> DeclKind override
     {
         return DeclKind::ParmVarDecl;
@@ -309,8 +301,6 @@ public:
 
     auto parm_begin() { return params.begin(); }
     auto parm_end() { return params.end(); }
-
-    void dump(std::string&, size_t depth) override;
 
     auto decl_kind() const -> DeclKind override
     {
@@ -367,7 +357,7 @@ public:
     {
     }
 
-    void dump(std::string&, size_t depth) override;
+    auto get_value() const -> int32_t { return value; }
 
     auto expr_kind() const -> ExprKind override
     {
@@ -406,8 +396,6 @@ public:
         loc(loc)
     {
     }
-
-    void dump(std::string&, size_t depth) override;
 
     auto type() const -> ExprType override
     {
@@ -466,8 +454,6 @@ public:
 
     auto arg_begin() { return args.begin(); }
     auto arg_end() { return args.end(); }
-
-    void dump(std::string&, size_t depth) override;
 
     auto type() const -> ExprType override
     {
@@ -532,8 +518,6 @@ public:
         assert(this->left != nullptr && this->right != nullptr);
     }
 
-    void dump(std::string&, size_t depth) override;
-
     auto type() const -> ExprType override
     {
         return ExprType::Int;
@@ -541,6 +525,7 @@ public:
 
     auto get_left() -> std::shared_ptr<ASTExpr> { return left; }
     auto get_right() -> std::shared_ptr<ASTExpr> { return right; }
+    auto get_operation() const -> Operation { return op; }
 
     auto expr_kind() const -> ExprKind override
     {
@@ -588,8 +573,6 @@ public:
 class ASTNullStmt : public ASTStmt
 {
 public:
-    void dump(std::string&, size_t depth) override;
-
     auto stmt_kind() const -> StmtKind override
     {
         return StmtKind::NullStmt;
@@ -611,8 +594,6 @@ public:
         stms(std::move(stms))
     {
     }
-
-    void dump(std::string&, size_t depth) override;
 
     auto decl_begin() { return decls.begin(); }
     auto decl_end() { return decls.end(); }
@@ -648,8 +629,6 @@ public:
     {
     }
 
-    void dump(std::string&, size_t depth) override;
-
     auto get_cond() -> std::shared_ptr<ASTExpr> { return expr; }
     auto get_then() -> std::shared_ptr<ASTStmt> { return stmt1; }
     auto get_else() -> std::shared_ptr<ASTStmt> { return stmt2; }
@@ -681,8 +660,6 @@ public:
     {
     }
 
-    void dump(std::string&, size_t depth) override;
-
     auto get_cond() -> std::shared_ptr<ASTExpr> { return expr; }
     auto get_body() -> std::shared_ptr<ASTStmt> { return stmt; }
 
@@ -709,8 +686,6 @@ public:
         expr(std::move(expr))
     {
     }
-
-    void dump(std::string&, size_t depth) override;
 
     /// \returns the return expression or `nullptr` if none.
     auto get_expr() -> std::shared_ptr<ASTExpr> { return expr; }
