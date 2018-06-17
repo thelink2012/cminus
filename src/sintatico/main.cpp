@@ -1,3 +1,4 @@
+#include <cminus/ast-dump-visitor.hpp>
 #include <cminus/parser.hpp>
 #include <cminus/scanner.hpp>
 #include <cminus/semantics.hpp>
@@ -32,7 +33,8 @@ int sintatico(std::FILE* istream, std::FILE* ostream)
         if(!error)
         {
             std::string ast_dump;
-            ast->dump(ast_dump, 0);
+            ASTDumpVisitor visitor(ast_dump);
+            visitor.visit_program(*ast);
             std::fprintf(ostream, "%s\n", ast_dump.c_str());
         }
     }

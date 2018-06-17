@@ -97,8 +97,9 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
     if(!expect_and_consume(Category::OpenParen))
         return nullptr;
 
-    std::shared_ptr<ASTCompoundStmt> comp_stmt;
-    std::vector<std::shared_ptr<ASTParmVarDecl>> params;
+    auto fun_decl = sema.act_on_fun_decl_start(*retn, *id);
+    assert(fun_decl != nullptr);
+
     {
         // Enter a new scope context for the parameters.
         // Keep it active while parsing the function body as well.
@@ -114,7 +115,7 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
         else // <param-list> ::= <param-list> , <param> | <param>
         {
             if(auto param = parse_param())
-                params.push_back(param);
+                fun_decl->add_param(std::move(param));
             else
                 return nullptr;
 
@@ -124,7 +125,7 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
                     return nullptr;
 
                 if(auto param = parse_param())
-                    params.push_back(param);
+                    fun_decl->add_param(std::move(param));
                 else
                     return nullptr;
             }
@@ -133,13 +134,15 @@ auto Parser::parse_fun_declaration() -> std::shared_ptr<ASTFunDecl>
         if(!expect_and_consume(Category::CloseParen))
             return nullptr;
 
-        comp_stmt = parse_compound_stmt(ScopeFlags::CompoundStmt
-                                        | ScopeFlags::FunScope);
+        auto comp_stmt = parse_compound_stmt(ScopeFlags::CompoundStmt
+                                             | ScopeFlags::FunScope);
         if(!comp_stmt)
             return nullptr;
+
+        fun_decl->set_body(std::move(comp_stmt));
     }
 
-    return sema.act_on_fun_decl(*retn, *id, std::move(params), std::move(comp_stmt));
+    return sema.act_on_fun_decl_end(std::move(fun_decl));
 }
 
 // <param> ::= <type-specifier> ID | <type-specifier> ID [ ]
@@ -201,7 +204,7 @@ auto Parser::parse_expr_stmt() -> std::shared_ptr<ASTStmt>
     {
         if(!expect_and_consume(Category::Semicolon))
             return nullptr;
-        return expr;
+        return sema.act_on_expr_stmt(std::move(expr));
     }
     return nullptr;
 }
@@ -314,17 +317,18 @@ auto Parser::parse_iteration_stmt() -> std::shared_ptr<ASTIterationStmt>
 // <return-stmt> ::= return ; | return <expression> ;
 auto Parser::parse_return_stmt() -> std::shared_ptr<ASTReturnStmt>
 {
-    if(!expect_and_consume(Category::Return))
+    auto return_word = expect_and_consume(Category::Return);
+    if(!return_word)
         return nullptr;
 
     if(try_consume(Category::Semicolon))
-        return sema.act_on_return_stmt(nullptr);
+        return sema.act_on_return_stmt(nullptr, *return_word);
 
     if(auto expr = parse_expression())
     {
         if(!expect_and_consume(Category::Semicolon))
             return nullptr;
-        return sema.act_on_return_stmt(std::move(expr));
+        return sema.act_on_return_stmt(std::move(expr), *return_word);
     }
     return nullptr;
 }
@@ -344,17 +348,14 @@ auto Parser::parse_expression() -> std::shared_ptr<ASTExpr>
         // by an '=' token in the lookahead, it stops and derives the <var>.
         //
         // Our job is, then, to eat the '=' token and derive the assignment into <var>.
-        if(expr1->is<ASTVarRef>() && try_consume(Category::Assign))
+        std::optional<Word> op_word;
+        std::shared_ptr<ASTVarRef> lvalue;
+        if((lvalue = expr1->as_var_expr()) && (op_word = try_consume(Category::Assign)))
         {
             if(auto expr2 = parse_expression())
-            {
-                auto lvalue = std::static_pointer_cast<ASTVarRef>(expr1);
-                return sema.act_on_assign(std::move(lvalue), expr2);
-            }
+                return sema.act_on_assign(std::move(lvalue), expr2, *op_word);
             else
-            {
                 return nullptr;
-            }
         }
         return expr1;
     }
@@ -374,7 +375,7 @@ auto Parser::parse_simple_expression() -> std::shared_ptr<ASTExpr>
                                       Category::Equal, Category::NotEqual))
         {
             if(auto expr2 = parse_additive_expression())
-                return sema.act_on_binary_expr(expr1, expr2, op_word->category);
+                return sema.act_on_binary_expr(expr1, expr2, *op_word);
             else
                 return nullptr;
         }
@@ -394,7 +395,7 @@ auto Parser::parse_additive_expression() -> std::shared_ptr<ASTExpr>
         while(auto op_word = try_consume(Category::Plus, Category::Minus))
         {
             if(auto expr2 = parse_term())
-                expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
+                expr1 = sema.act_on_binary_expr(expr1, expr2, *op_word);
             else
                 return nullptr;
         }
@@ -412,7 +413,7 @@ auto Parser::parse_term() -> std::shared_ptr<ASTExpr>
         while(auto op_word = try_consume(Category::Multiply, Category::Divide))
         {
             if(auto expr2 = parse_factor())
-                expr1 = sema.act_on_binary_expr(expr1, expr2, op_word->category);
+                expr1 = sema.act_on_binary_expr(expr1, expr2, *op_word);
             else
                 return nullptr;
         }
@@ -534,10 +535,11 @@ auto Parser::parse_call() -> std::shared_ptr<ASTFunCall>
             return nullptr;
     }
 
-    if(!expect_and_consume(Category::CloseParen))
+    auto rparen = expect_and_consume(Category::CloseParen);
+    if(!rparen)
         return nullptr;
 
-    return sema.act_on_call(*id, std::move(args));
+    return sema.act_on_call(*id, std::move(args), rparen->location());
 }
 }
 

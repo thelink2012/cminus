@@ -1,0 +1,13 @@
+[program 
+  [fun-declaration 
+    [void]
+    [main]
+    [params]
+    [compound-stmt 
+      [selection-stmt [1]
+        [compound-stmt 
+        ]
+      ]
+    ]
+  ]
+]

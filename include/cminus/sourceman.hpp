@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string_view>
 #include <vector>
 
@@ -43,10 +44,17 @@ public:
     auto find_line_and_column(SourceLocation loc) const
             -> std::pair<unsigned, unsigned>;
 
+    /// This transforms an arbitrary string, not present in the original source
+    /// file, into a `SourceRange` object.
+    ///
+    /// This essentially emulates the appearence of a string in the source file.
+    auto make_source_range(std::string) -> SourceRange;
+
 private:
     std::unique_ptr<char[]> source_data;
     size_t source_size;
     std::vector<SourceLocation> lines;
+    std::set<std::string> vranges; //< built using make_source_range
 };
 
 // Assume SourceLocation and SourceRange are simple types,

@@ -3,7 +3,8 @@
     [void]
     [main]
     [params]
-    [compound-stmt [var [main]]
+    [compound-stmt 
+      [+ [1] [1]]
     ]
   ]
 ]

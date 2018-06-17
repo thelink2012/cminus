@@ -24,10 +24,29 @@ enum class Diag
     parser_expected_expression,
     parser_expected_statement,
     parser_number_too_big,
+
+    sema_redefinition,          // %0 => SymbolName
+    sema_undeclared_identifier, // %0 => SymbolName
+    sema_empty_program,
+    sema_last_decl_not_main,
+    sema_var_cannot_be_void,
+    sema_assignment_type_error,
+    sema_binary_expr_type_error,
+    sema_array_statement,
+    sema_expr_not_boolean,
+    sema_void_fun_returning_value,
+    sema_incompatible_return_type,
+    sema_int_fun_not_returning_value,
+    sema_var_is_not_var,
+    sema_index_is_not_int,
+    sema_fun_is_not_fun,
+    sema_arg_too_few_params,
+    sema_arg_too_many_params,
+    sema_arg_type_mismatch,
 };
 
 /// Parameter for `Diag` printing.
-using DiagParam = std::variant<Category>;
+using DiagParam = std::variant<Category, SourceRange>;
 
 /// Diagnostic information.
 struct Diagnostic
@@ -105,6 +124,16 @@ public:
         DiagnosticBuilder builder(source, loc, code, *this);
         (builder.arg(std::forward<Args>(args)), ...);
         return builder;
+    }
+
+    /// Reports a compiler diagnostic without location information.
+    template<typename... Args>
+    auto report(const SourceFile& source, Diag code, Args&&... args)
+            -> DiagnosticBuilder
+    {
+        // TODO remove the need for a source location.
+        auto loc = source.view_with_terminator().begin();
+        return report(source, loc, code, std::forward<Args>(args)...);
     }
 
     /// Replaces the diagnostic handler with another handler.
