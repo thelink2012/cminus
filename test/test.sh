@@ -8,3 +8,8 @@ echo "Testing parser..."
 cd sintatico
 sh ./test.sh
 cd ..
+cd ..
+echo "Testing code generation..."
+cd geracodigo
+sh ./test.sh
+cd ..

@@ -1,4 +1,4 @@
-#include <cminus/ast-dump-visitor.hpp>
+#include <cminus/ast-codegen-visitor.hpp>
 #include <cminus/parser.hpp>
 #include <cminus/scanner.hpp>
 #include <cminus/semantics.hpp>
@@ -6,6 +6,29 @@
 #include <cminus/utility/scope_guard.hpp>
 #include <cstring>
 using namespace cminus;
+
+std::string_view crt_code = R"__mips__(
+.text
+.globl main
+
+_println:
+li $v0, 1  # print_int
+syscall
+li $a0, 0x0a
+li $v0, 11 # print_char
+syscall
+j $ra
+
+_input:
+li $v0, 5 # read_int
+syscall
+j $ra
+
+main:
+jal _main
+li $v0, 10 # exit
+syscall
+)__mips__";
 
 int codegen(std::FILE* istream, std::FILE* ostream)
 {
@@ -15,7 +38,7 @@ int codegen(std::FILE* istream, std::FILE* ostream)
     auto source = SourceFile::from_stream(istream);
     if(!source)
     {
-        std::perror("sintatico: error");
+        std::perror("geracodigo: error");
         return 1;
     }
 
@@ -33,9 +56,10 @@ int codegen(std::FILE* istream, std::FILE* ostream)
         if(!error)
         {
             std::string codegen;
-            ASTCodeGenVisitor visitor(codegen);
+            ASTCodegenVisitor visitor(codegen);
             visitor.visit_program(*ast);
             std::fprintf(ostream, "%s\n", codegen.c_str());
+            std::fprintf(ostream, "%*s\n", (int) crt_code.size(), crt_code.data());
         }
     }
 
@@ -46,7 +70,7 @@ int main(int argc, char* argv[])
 {
     if(argc < 3)
     {
-        std::fprintf(stderr, "usage: ./sintatico <source-file> <out-file>\n");
+        std::fprintf(stderr, "usage: ./geracodigo <source-file> <out-file>\n");
         return 1;
     }
 
@@ -63,7 +87,7 @@ int main(int argc, char* argv[])
         if(ostream == nullptr)
         {
             ostream_guard.dismiss();
-            std::perror("sintatico: error");
+            std::perror("geracodigo: error");
             return 1;
         }
     }
@@ -81,7 +105,7 @@ int main(int argc, char* argv[])
         if(istream == nullptr)
         {
             istream_guard.dismiss();
-            std::perror("sintatico: error");
+            std::perror("geracodigo: error");
             return 1;
         }
     }
