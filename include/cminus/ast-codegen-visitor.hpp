@@ -78,6 +78,9 @@ private:
     /// Frees temporary space from the stack frame.
     void temp_free(int32_t offset, int32_t size);
 
+    /// Generates a label id.
+    int32_t next_label_id();
+
     /// Gets the name of the register number `reg`.
     auto regname(int reg) -> const char*;
 
@@ -88,6 +91,8 @@ private:
 
     FrameInfo current_frame;
     int32_t current_temp_pos = 0;
+    int32_t current_label_id = 0;
     bool inside_function = false;
+    int32_t function_label_goto_ob = -1;
 };
 }

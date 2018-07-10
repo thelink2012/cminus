@@ -1,0 +1,8 @@
+int pad1[20];
+int arr[3];
+int pad2[20];
+
+void main(void)
+{
+    println(arr[0 - 1]);
+}

@@ -9,9 +9,15 @@ using namespace cminus;
 
 std::string_view crt_code = R"__mips__(
 .text
-.globl main
+.globl __crt_out_of_bounds
+.globl println
+.globl input
 
-_println:
+__crt_out_of_bounds:
+li $v0, 10 # exit
+syscall
+
+println:
 li $v0, 1  # print_int
 syscall
 li $a0, 0x0a
@@ -19,15 +25,10 @@ li $v0, 11 # print_char
 syscall
 j $ra
 
-_input:
+input:
 li $v0, 5 # read_int
 syscall
 j $ra
-
-main:
-jal _main
-li $v0, 10 # exit
-syscall
 )__mips__";
 
 int codegen(std::FILE* istream, std::FILE* ostream)

@@ -51,18 +51,20 @@ public:
         this->frame = FrameInfo{};
         this->frame.saved_size = 4; // $ra
 
-        // Calculate size of input block.
-        for(auto it = decl.parm_begin(); it != decl.parm_end(); ++it)
-        {
-            auto var_decl = static_cast<ASTVarDecl*>((*it).get());
-            this->local_pos[var_decl] = frame.input_size;
-            this->frame.input_size += 4;
-        }
-
         // Calculate the size of the other blocks by recursing into the body.
         this->inside_function = true;
         visit_compound_stmt(*decl.get_body());
         this->inside_function = false;
+
+        // Calculate size of input block and assign offset to param vars.
+        // Must be after recursing into the body so we have the size of
+        // the local block already computed.
+        for(auto it = decl.parm_begin(); it != decl.parm_end(); ++it)
+        {
+            auto var_decl = static_cast<ASTVarDecl*>((*it).get());
+            this->local_pos[var_decl] = frame.local_size + frame.input_size;
+            this->frame.input_size += 4;
+        }
 
         this->frames[&decl] = std::move(this->frame);
     }
@@ -160,10 +162,8 @@ void ASTCodegenVisitor::visit_program(ASTProgram& program)
     {
         if(auto fun_decl = (*it)->as_fun_decl())
         {
-            this->inside_function = true;
             frame_allocator.visit_fun_decl(*fun_decl);
             visit_fun_decl(*fun_decl);
-            this->inside_function = false;
         }
     }
 }
@@ -172,7 +172,6 @@ void ASTCodegenVisitor::visit_var_decl(ASTVarDecl& decl)
 {
     if(!inside_function)
     {
-        dest += '_';
         dest += decl.get_name();
         dest += ": ";
 
@@ -191,14 +190,30 @@ void ASTCodegenVisitor::visit_parm_decl(ASTParmVarDecl& decl)
 
 void ASTCodegenVisitor::visit_fun_decl(ASTFunDecl& decl)
 {
-    const auto RA_OFFSET = current_frame.saved_offset(0);
-    
-    dest += '_';
-    dest += decl.get_name();
-    dest += ":\n";
-
     this->current_frame = this->frames[&decl];
     auto frame_size_s = std::to_string(current_frame.total_size());
+
+    const auto RA_OFFSET = current_frame.saved_offset(0);
+
+    this->inside_function = true;
+    this->function_label_goto_ob = -1;
+
+    /*
+    dest += "# ";
+    dest += std::to_string(current_frame.output_size);
+    dest += ' ';
+    dest += std::to_string(current_frame.temp_size);
+    dest += ' ';
+    dest += std::to_string(current_frame.saved_size);
+    dest += ' ';
+    dest += std::to_string(current_frame.local_size);
+    dest += ' ';
+    dest += std::to_string(current_frame.input_size);
+    dest += '\n';
+    */
+
+    dest += decl.get_name();
+    dest += ":\n";
 
     // Function prologue.
     dest += "addiu $sp, $sp, -";
@@ -217,6 +232,19 @@ void ASTCodegenVisitor::visit_fun_decl(ASTFunDecl& decl)
     dest += "\n";
 
     dest += "jr $ra\n";
+
+    // We need to generate this stub at the bottom of the function
+    // because a normal (non-jump) MIPS instruction has too little
+    // space for a big offset. The crt may be too far away.
+    if(function_label_goto_ob != -1)
+    {
+        dest += ".L";
+        dest += std::to_string(function_label_goto_ob);
+        dest += ":\n";
+        dest += "j __crt_out_of_bounds\n";
+    }
+
+    this->inside_function = false;
 }
 
 void ASTCodegenVisitor::visit_null_stmt(ASTNullStmt&)
@@ -318,12 +346,36 @@ void ASTCodegenVisitor::visit_number_expr(ASTNumber& num)
 void ASTCodegenVisitor::visit_var_expr(ASTVarRef& var)
 {
     load_address_of(var);
-    dest += "lw $v0, 0($v0)\n";
+    if(var.type() != ExprType::Array)
+        dest += "lw $v0, 0($v0)\n";
 }
 
 void ASTCodegenVisitor::visit_call_expr(ASTFunCall& fun_call)
 {
-    // TODO
+    auto fun_decl = fun_call.get_decl();
+
+    size_t argcount = 0;
+    for(auto it = fun_call.arg_begin(); 
+            it != fun_call.arg_end(); 
+            ++it, ++argcount)
+    {
+        visit_expr(**it);
+
+        if(argcount < 4)
+        {
+            dest += "add $";
+            dest += regname(REG_A0 + argcount);
+            dest += ", $v0, $0\n";
+        }
+        else
+        {
+            emit_frame_sw(REG_V0, current_frame.output_offset(4 * (argcount - 4)));
+        }
+    }
+
+    dest += "jal ";
+    dest += fun_decl->get_name();
+    dest += '\n';
 }
 
 void ASTCodegenVisitor::visit_type(ExprType type)
@@ -347,10 +399,13 @@ void ASTCodegenVisitor::load_address_of(ASTVarRef& var_ref)
         dest += "addiu $v0, $sp, ";
         dest += std::to_string(frame_offset);
         dest += '\n';;
+
+        if(var_decl->is_pointer())
+            dest += "lw $v0, 0($v0)\n";
     }
     else
     {
-        dest += "la $v0, _";
+        dest += "la $v0, ";
         dest += var_decl->get_name();
         dest += '\n';
     }
@@ -360,8 +415,17 @@ void ASTCodegenVisitor::load_address_of(ASTVarRef& var_ref)
         const auto temp_bytes = var_ref.get_index()? 4 : 0;
         const auto temp_pos = temp_alloc(temp_bytes);
 
+        if(this->function_label_goto_ob == -1)
+            this->function_label_goto_ob = next_label_id();
+
         emit_frame_sw(REG_V0, temp_pos);
         visit_expr(*index_expr);
+
+        // Check negative index.
+        dest += "bltzal $v0, .L";
+        dest += std::to_string(function_label_goto_ob);
+        dest += '\n';
+
         dest += "sll $v0, $v0, 2\n";
         emit_frame_lw(REG_T0, temp_pos);
         dest += "addu $v0, $t0, $v0\n";
@@ -430,6 +494,11 @@ void ASTCodegenVisitor::temp_free(int32_t offset, int32_t size)
 {
     this->current_temp_pos -= size;
     assert(current_temp_pos == offset);
+}
+
+int32_t ASTCodegenVisitor::next_label_id()
+{
+    return ++current_label_id;
 }
 
 auto ASTCodegenVisitor::regname(int reg) -> const char*
