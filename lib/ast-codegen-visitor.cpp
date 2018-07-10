@@ -63,7 +63,7 @@ public:
         {
             auto var_decl = static_cast<ASTVarDecl*>((*it).get());
             this->local_pos[var_decl] = frame.local_size + frame.input_size;
-            this->frame.input_size += 4;
+            this->frame.input_size = std::min(16, frame.input_size + 4);
         }
 
         this->frames[&decl] = std::move(this->frame);
@@ -220,7 +220,7 @@ void ASTCodegenVisitor::visit_fun_decl(ASTFunDecl& decl)
     dest += frame_size_s;
     dest += "\n";
     emit_frame_sw(REG_RA, RA_OFFSET);
-    for(size_t i = 0; i < decl.get_num_params(); ++i)
+    for(size_t i = 0; i < 4 && i < decl.get_num_params(); ++i)
         emit_frame_sw(REG_A0 + i, current_frame.input_offset(4 * i));
 
     visit_compound_stmt(*decl.get_body());
@@ -412,7 +412,7 @@ void ASTCodegenVisitor::load_address_of(ASTVarRef& var_ref)
 
     if(auto index_expr = var_ref.get_index())
     {
-        const auto temp_bytes = var_ref.get_index()? 4 : 0;
+        const auto temp_bytes = 4;
         const auto temp_pos = temp_alloc(temp_bytes);
 
         if(this->function_label_goto_ob == -1)
@@ -493,7 +493,7 @@ int32_t ASTCodegenVisitor::temp_alloc(int32_t size)
 void ASTCodegenVisitor::temp_free(int32_t offset, int32_t size)
 {
     this->current_temp_pos -= size;
-    assert(current_temp_pos == offset);
+    assert(current_frame.temp_offset(current_temp_pos) == offset);
 }
 
 int32_t ASTCodegenVisitor::next_label_id()
