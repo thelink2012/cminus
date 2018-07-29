@@ -223,9 +223,15 @@ void ASTCodegenVisitor::visit_fun_decl(ASTFunDecl& decl)
     for(size_t i = 0; i < 4 && i < decl.get_num_params(); ++i)
         emit_frame_sw(REG_A0 + i, current_frame.input_offset(4 * i));
 
+    this->function_epilogue_label = next_label_id();
+
     visit_compound_stmt(*decl.get_body());
 
     // Function epilogue
+    dest += ".L";
+    dest += std::to_string(function_epilogue_label);
+    dest += ":\n";
+
     emit_frame_lw(REG_RA, RA_OFFSET);
     dest += "addiu $sp, $sp, ";
     dest += frame_size_s;
@@ -259,17 +265,68 @@ void ASTCodegenVisitor::visit_compound_stmt(ASTCompoundStmt& comp_stmt)
 
 void ASTCodegenVisitor::visit_selection_stmt(ASTSelectionStmt& if_stmt)
 {
-    // TODO
+    const auto true_label = next_label_id();
+    const auto fi_label = next_label_id();
+
+    visit_expr(*if_stmt.get_cond());
+
+    dest += "bne $v0, $0, .L";
+    dest += std::to_string(true_label);
+    dest += '\n';
+
+    if(if_stmt.get_else())
+        visit_stmt(*if_stmt.get_else());
+
+    dest += "j .L";
+    dest += std::to_string(fi_label);
+    dest += '\n';
+
+    dest += ".L";
+    dest += std::to_string(true_label);
+    dest += ":\n";
+
+    visit_stmt(*if_stmt.get_then());
+
+    dest += ".L";
+    dest += std::to_string(fi_label);
+    dest += ":\n";
 }
 
 void ASTCodegenVisitor::visit_iteration_stmt(ASTIterationStmt& while_stmt)
 {
-    // TODO
+    auto const if_label = next_label_id();
+    auto const fi_label = next_label_id();
+
+    dest += ".L";
+    dest += std::to_string(if_label);
+    dest += ":\n";
+
+    visit_expr(*while_stmt.get_cond());
+
+    dest += "beq $v0, $0, .L";
+    dest += std::to_string(fi_label);
+    dest += '\n';
+
+    visit_stmt(*while_stmt.get_body());
+
+    dest += "j .L";
+    dest += std::to_string(if_label);
+    dest += '\n';
+
+    dest += ".L";
+    dest += std::to_string(fi_label);
+    dest += ":\n";
 }
 
 void ASTCodegenVisitor::visit_return_stmt(ASTReturnStmt& retn_stmt)
 {
-    // TODO
+    if(retn_stmt.get_expr())
+        visit_expr(*retn_stmt.get_expr());
+
+    // Function epilogue
+    dest += "j .L";
+    dest += std::to_string(function_epilogue_label);
+    dest += '\n';
 }
 
 void ASTCodegenVisitor::visit_binary_expr(ASTBinaryExpr& expr)

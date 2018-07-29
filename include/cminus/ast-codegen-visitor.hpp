@@ -94,5 +94,6 @@ private:
     int32_t current_label_id = 0;
     bool inside_function = false;
     int32_t function_label_goto_ob = -1;
+    int32_t function_epilogue_label;
 };
 }
