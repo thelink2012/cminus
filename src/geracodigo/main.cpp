@@ -23,12 +23,12 @@ syscall
 li $a0, 0x0a
 li $v0, 11 # print_char
 syscall
-j $ra
+jr $ra
 
 input:
 li $v0, 5 # read_int
 syscall
-j $ra
+jr $ra
 )__mips__";
 
 int codegen(std::FILE* istream, std::FILE* ostream)

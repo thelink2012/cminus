@@ -265,31 +265,38 @@ void ASTCodegenVisitor::visit_compound_stmt(ASTCompoundStmt& comp_stmt)
 
 void ASTCodegenVisitor::visit_selection_stmt(ASTSelectionStmt& if_stmt)
 {
-    const auto true_label = next_label_id();
-    const auto fi_label = next_label_id();
+    const auto false_label = next_label_id();
+    int32_t fi_label = -1;
 
     visit_expr(*if_stmt.get_cond());
 
-    dest += "bne $v0, $0, .L";
-    dest += std::to_string(true_label);
+    dest += "beq $v0, $0, .L";
+    dest += std::to_string(false_label);
     dest += '\n';
-
-    if(if_stmt.get_else())
-        visit_stmt(*if_stmt.get_else());
-
-    dest += "j .L";
-    dest += std::to_string(fi_label);
-    dest += '\n';
-
-    dest += ".L";
-    dest += std::to_string(true_label);
-    dest += ":\n";
 
     visit_stmt(*if_stmt.get_then());
 
+    if(if_stmt.get_else())
+    {
+        fi_label = next_label_id();
+
+        dest += "j .L";
+        dest += std::to_string(fi_label);
+        dest += '\n';
+    }
+
     dest += ".L";
-    dest += std::to_string(fi_label);
+    dest += std::to_string(false_label);
     dest += ":\n";
+
+    if(if_stmt.get_else())
+    {
+        visit_stmt(*if_stmt.get_else());
+
+        dest += ".L";
+        dest += std::to_string(fi_label);
+        dest += ":\n";
+    }
 }
 
 void ASTCodegenVisitor::visit_iteration_stmt(ASTIterationStmt& while_stmt)
@@ -379,7 +386,7 @@ void ASTCodegenVisitor::visit_binary_expr(ASTBinaryExpr& expr)
             break;
         case ASTBinaryExpr::Operation::Equal:
             dest += "xor $v0, $t0, $v0\n";
-            dest += "sltu $v0, $v0, 1\n";
+            dest += "sltiu $v0, $v0, 1\n";
             break;
         case ASTBinaryExpr::Operation::NotEqual:
             dest += "xor $v0, $t0, $v0\n";
