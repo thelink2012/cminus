@@ -1,0 +1,18 @@
+int foo(int x, int y)
+{
+    int k;
+    int l;
+
+    if(x == 0)
+        return 42; /* test cleanup of vars */
+
+    k = x * y;
+    l = x + y;
+    return l * k;
+}
+
+void main(void)
+{
+    println(foo(0, 20));
+    println(foo(10, 20));
+}

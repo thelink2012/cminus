@@ -248,6 +248,8 @@ public:
 
     auto get_array_size() const -> std::shared_ptr<ASTNumber> { return array_size; }
 
+    bool is_pointer() const { return is_array() && !get_array_size(); }
+
 protected:
     SourceRange name;
     std::shared_ptr<ASTNumber> array_size; //< may be null, even if is_array_=true

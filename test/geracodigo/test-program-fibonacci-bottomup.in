@@ -1,0 +1,21 @@
+void main(void)
+{
+    int memo[47];
+    int n;
+    int i;
+
+    memo[0] = 1;
+    memo[1] = 1;
+    memo[2] = 1;
+    i = 3;
+    while(i < 47)
+    {
+        memo[i] = memo[i-1] + memo[i-2];
+        i = i + 1;
+    }
+
+    while(n = input())
+    {
+        println(memo[n]);
+    }
+}

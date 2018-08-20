@@ -1,0 +1,145 @@
+/* https://www.spoj.com/problems/EZDIJKST limited to a set of 0..10 */
+
+int dijkstra(int from, int to, int numv, int edges[], int weights[])
+{
+    int i;
+    int v;
+    int u;
+    int aux;
+    int dist[10];
+    int vis[10];
+    int numvis;
+
+    i = 0;
+    while(i <= numv)
+    {
+        if(i != from)
+            dist[i] = 2147483647;
+        else
+            dist[i] = 0;
+        i = i + 1;
+    }
+
+    i = 0;
+    numvis = 0;
+    while(i <= numv)
+    {
+        vis[i] = 0;
+        i = i + 1;
+    }
+
+    while(numvis != numv)
+    {
+        int mindist;
+        int minv;
+
+        mindist =  2147483647;
+        v = 1;
+        while(v <= numv)
+        {
+            if(vis[v] == 0) 
+            {
+                if(dist[v] <= mindist)
+                {
+                    mindist = dist[v];
+                    minv = v;
+                }
+            }
+            v = v + 1;
+        }
+
+        vis[minv] = 1;
+        numvis = numvis + 1;
+
+        i = edges[10*minv + 0];
+        while(i > 0)
+        {
+            u = edges[10*minv + i];
+            if(vis[u] == 0)
+            {
+                aux = dist[minv] + weights[10*minv + i];
+                if(aux < dist[u])
+                    dist[u] = aux;
+            }
+            i = i - 1;
+        }
+    }
+
+
+    if(dist[to] == 2147483647)
+        return 0-1;
+
+    return dist[to];
+}
+
+void main(void)
+{
+    int i;
+    int j;
+    int t;
+    int v;
+    int k;
+    int a;
+    int b;
+    int c;
+    int len;
+
+    int edges[100];   /* [10][10] where [v][0] is num edges */
+    int weights[100]; /* same as above */ 
+
+    t = input();
+    while(t > 0)
+    {
+        t = t - 1;
+
+        i = 0;
+        while(i < 10)
+        {
+            /* clear length field for vertex i */
+            edges[i*10 + 0] = 0;
+            weights[i*10 + 0] = 0;
+            i = i + 1;
+        }
+
+        v = input();
+        k = input();
+
+        i = 0;
+        while(i < k)
+        {
+            a = input();
+            b = input();
+            c = input();
+
+            /* create link a => (b, c) */
+            {
+                len = edges[a*10 + 0];
+                len = len + 1;
+
+                edges[a*10 + len] = b;
+                weights[a*10 + len] = c;
+
+                edges[a*10 + 0] = len;
+                weights[a*10 + 0] = len;
+            }
+
+            /* create link b => (a, c) */
+            {
+                len = edges[b*10 + 0];
+                len = len + 1;
+
+                edges[b*10 + len] = a;
+                weights[b*10 + len] = c;
+
+                edges[b*10 + 0] = len;
+                weights[b*10 + 0] = len;
+            }
+
+            i = i + 1;
+        }
+
+        a = input();
+        b = input();
+        println(dijkstra(a, b, v, edges, weights));
+    }
+}

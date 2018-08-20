@@ -1,0 +1,17 @@
+void main(void)
+{
+    int x;
+    int y;
+    int z;
+    int w;
+    int k;
+
+    x = input();
+    y = input();
+    z = input();
+    w = input();
+    
+    k = (x * (z + w - x + (x * (y / (w - (z + (x * (w - (z + (y * (x / (w * (w * (y - (z + (x * (y * (z * w))))))))))))))))));
+    
+    println(k);
+}
