@@ -7,13 +7,13 @@ matrix:
       addons:
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['libstdc++-7-dev']
+          packages: ['spim', 'libstdc++-7-dev']
     - os: linux
       addons:
         apt:
           sources:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++-7']
+          packages: ['spim', 'g++-7']
       env:
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 before_install:
