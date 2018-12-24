@@ -1,8 +1,7 @@
-# TODO NDEBUG
 BUILD_DIR ?= ./build
 MKDIR_P ?= mkdir -p
 
-CXXFLAGS += -std=c++17 -pedantic -Wall -Wextra -O0 -g
+CXXFLAGS += -std=c++17 -pedantic -Wall -Wextra -Wno-unused-parameter -O0 -g
 INCLUDE += -I include
 DEFINE +=
 CPPFLAGS += $(DEFINE) $(INCLUDE) -MMD -MP
@@ -23,18 +22,11 @@ GERACODIGO_SRC := $(shell find src/geracodigo -name *.cpp -or -name *.c)
 GERACODIGO_OBJ := $(GERACODIGO_SRC:%=$(BUILD_DIR)/%.o)
 GERACODIGO_DEP := $(GERACODIGO_OBJ:.o=.d)
 
-CMINUS_SRC := $(shell find src/cminus -name *.cpp -or -name *.c)
-CMINUS_OBJ := $(CMINUS_SRC:%=$(BUILD_DIR)/%.o)
-CMINUS_DEP := $(CMINUS_OBJ:.o=.d)
 
-
-all: lexico sintatico geracodigo cminus
+all: lexico sintatico geracodigo
 
 libcminus.a: $(LIBCMINUS_OBJ)
 	ar rcs $@ $(LIBCMINUS_OBJ)
-
-cminus: $(CMINUS_OBJ) libcminus.a
-	$(CXX) $(CMINUS_OBJ) -o $@ -L. -lcminus
 
 lexico: $(LEXICO_OBJ) libcminus.a
 	$(CXX) $(LEXICO_OBJ) -o $@ -L. -lcminus
@@ -57,7 +49,6 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 clean:
 	$(RM) -r $(BUILD_DIR)
 	$(RM) libcminus.a
-	$(RM) cminus
 	$(RM) lexico
 	$(RM) sintatico
 	$(RM) geracodigo

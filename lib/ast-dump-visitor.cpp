@@ -28,6 +28,8 @@ auto ASTDumpVisitor::operation(ASTBinaryExpr::Operation op) -> const char*
             return "!=";
         case ASTBinaryExpr::Operation::Assign:
             return "=";
+        default:
+            assert(false);
     }
 }
 
